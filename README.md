@@ -187,8 +187,6 @@ Conceito de **feição** ou **_simple feature_**. Apresentação de pacotes `sf`
 ### Exercícios de aplicação
 
 ---
-\
----
 
 #### Análise espacial 01
 
@@ -209,9 +207,8 @@ Determinar que ruas compõem o bairro de botafogo e estabelecer a que distância
  
   - <span style="color:red">`st_read()`, `st_crs()`,`st_transform()`, `st_geometry()`, `st_intersection()`, `st_intersects()`, `st_contains()`, `st_distance()`</span>.
 
-\
+
 ---
-\
 
 #### Análise espacial 02  
 
@@ -229,9 +226,7 @@ Funções empregadas:
  
   - <span style="color:red">`read_csv()`,`st_read()`, `mutate()`, `merge()`, `readOGR()`, `plot()`, `tmap()`</span>.
 
-\
 ---
-\
 
 #### Análise espacial 03
 
@@ -249,10 +244,7 @@ Calcular a densidade populacional em 2015 para cada município do Brasil.
  
   - <span style="color:red">`st_read()`, `st_crs()`,`st_area()`, `drop_units()`, `cbind()`, `filter()`, `st_contains()`, `select()`, `left_join()`, `mutate()`, `read_csv()`</span>.
 
-  
-\
 ---
-\
 
 #### Análise espacial 04 
 
@@ -270,9 +262,8 @@ Efetuar operações  de análise espacial com dados raster
  
   - <span style="color:red">`raster()`, `extent()`,`crop()`, `st_read()`, `st_transform()`, `st_geometry()`, `mask()`, `extract()`</span>.
 
-\
+
 ---
-\
 
 #### Análise espacial 05
 
@@ -297,9 +288,7 @@ Efetuar operações  de análise espacial com dados raster
   
   - <span style="color:red">`plot()`, `filter()`, `select()`, `str_detect()`, `unique()`, `fct_count()`</span>.
 
-\
 ---
-\
 
 CREDITOS: 
 
