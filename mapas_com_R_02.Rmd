@@ -58,6 +58,8 @@ knitr::opts_chunk$set(echo      = TRUE,
   
   e- outras funções de geoprocessamento
 
+Os dados para reproduzir os exercicios encontram-se na pasta "/data" e devem ser baixados de [_dropbox_](https://www.dropbox.com/sh/2gmhfx1ycos0ywh/AAAjVB6T6oygAq6nmFQEMUMNa?dl=0). A pasta completa deve estar no seu diretorio de trabalho.
+
 \
 ---
 \
