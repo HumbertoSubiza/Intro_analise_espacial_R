@@ -1,0 +1,521 @@
+---
+title: "Análise e visualização de dados espaciais com R - 2a. Parte"
+author: "Walter Humberto Subiza Piña"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+### Indice
+
+#### 1. Leitura de arquivos vetoriais e _raster_
+
+  Exercicio 02
+
+  a- Ponto
+
+  b- Linha
+
+  c- Poligono
+
+  d- Multipoligono
+
+  Exercício 03
+
+  e- _raster_ com uma camada ou layer
+
+  f- _raster_ multi-camadas ou multilayers
+
+  g- Base de dados _PostGis_
+
+#### 2- Manipulação de dados georreferenciados
+
+  a- Extração de metadados
+  
+  b- Identificação ou definição do _CRS_ 
+  
+  Exercício 04
+  
+  c- Reprojetar ou transformar um objeto georreferenciado
+  
+  Exercício 05
+  
+  d- conversão de dataframe com coordenadas em objeto `sf`, e viceversa
+  
+  Exercício 06
+  
+  Exercício 07
+  
+  Exercício 08
+  
+  e- outras funções de geoprocessamento
+
+\
+---
+\
+
+As seguintes bibliotecas do _R_ devem estar instaladas e carregadas para a correta execução dos fragmentos de código.
+
+```{r libraries}
+library(sf)
+library(raster)
+library(tidyverse)
+```
+
+\
+---
+\
+
+<div style="text-align:justify" markdown="1">
+
+### 1- Leitura de arquivos vetoriais e raster
+
+A leitura de arquivos vetoriais (ponto, linha ou polígono) usando o pacote `sf` é simples. A função `st_read()` determina automáticamente o formato adequado de importação quando colocamos o caminho e nome do arquivo com a extensão do mesmo. A função é capaz de ler um dado vetorial ou diretamente uma tabela _PostGis_. A mensagem na tela que resulta da execução desta função pode ser suprimida, usando o argumento `quit = T`, ou usando diretamente a função `read_sf()`.
+
+As funções mencionadas fazem uso da biblioteca `Geospatial Data Abstraction Library`
+([GDAL](http://www.gdal.org/)) implantada no _R_ através de `rgdal`, o que permite que sejam importados mais de 200 formatos diferentes de arquivos.
+
+No caso de arquivos tipo _shape_ ou camada, os arquivos necessários para uma correta importação são, ao mínimo, três com extensões: ".shp", ".dbf" e ".shx". Um quarto arquivo com extensão ".prj", contendo o _CRS_ pode estar presente ou ser omitido.
+
+#### Exercicio 02
+
+Na sequência apresentam-se quatro importações de arquivos vetoriais com geometria de ponto, linha, poligono e multipoligono. 
+
+Em cada importação feita, analise a saída e identifique:
+
+  - o tipo de geometria, 
+  
+  - a quantidade de registros e atributos, e 
+  
+  - o _CRS_
+
+</div>
+
+\
+---
+\
+
+#### a- Ponto
+
+```{r map01}
+# leitura de arquivo vetorial de pontos
+nig_pts <- st_read("data/nova_iguacu_pontos.shp")
+
+# verificamos a classe do objeto 
+class(nig_pts)
+
+# primeiras duas linhas do objeto
+head(nig_pts,2)
+```
+
+---
+
+Aproveitando que o objeto criado é da classe S-3 e é tratado como dataframe, vamos eliminar as colunas desnecessárias usando a função `select()` e deixando apenas o nome (variável "Name"). Note o fato de que a geometria esta preservada apesar da eliminação de atributos realizada após o `select`.
+
+
+```{r map02}
+nig_pts <- nig_pts %>% 
+  select(Name)
+
+head(nig_pts,4)
+```
+
+\
+---
+\
+
+#### b- Linha
+
+```{r map03}
+# leitura de arquivo vetorial de linhas
+nig_lin <- st_read("data/nova_iguacu_linha.shp")
+
+# verificamos a classe do objeto 
+class(nig_lin)
+
+# primeiras linhas do objeto
+head(nig_lin)
+```
+
+\
+---
+\
+
+<div style="text-align:justify" markdown="1">
+
+#### c- Poligono
+
+Na leitura de arquivos vetoriais com variáveis gravadas em outros idiomas que o inglês, devemos especificar o tipo de código usado na criação do arquivo, a fim de preservar os carateres especiais presentes nos atributos. Se o arquivo provem de um GIS, basta verificar nas propriedades da exportação. Se a codificação é desconhecida, devemos encontrar a correta, testando diversas opções. As mais usadas são "UTF-8", "windows-1252", "latin1" ou "system". Veja no exemplo o uso da codificação _UTF-8_.
+
+</div>
+
+```{r map04}
+# leitura de arquivo vetorial com 1 poligono e codificação UTF-8
+nig_pol <- st_read("data/nova_ig_mun_UTF.shp", options = "ENCODING=UTF-8")
+```
+
+```{r map05}
+# Inspeção do dataframe sf
+nig_pol
+```
+
+Na importação efetuada, qual o _CRS_ e o tipo de geometria? Que informação temos no dataframe?
+
+\
+---
+\
+
+#### d- Multipoligono
+
+
+```{r map06}
+# leitura de arquivo  vetorial multipoligono, codificado UTF-8
+rj_mun <- st_read("data/RJ_municip.shp", options = "ENCODING=UTF-8" )
+```
+
+```{r map07}
+# Inspeção do dataframe sf (apenas 6 registros)
+head(rj_mun)
+```
+
+Identifique a extensão geográfica do arquivo e o _CRS_.
+
+\
+---
+\
+
+#### e- Raster com uma camada ou _layer_
+
+<div style="text-align:justify" markdown="1">
+
+Na leitura de arquivos tipo matricial ou _raster_, usamos o pacote e função `raster::raster`. A importação é semelhante à vetorial e apenas especificam-se o caminho, nome  e extensão do arquivo. No caso de dados com apenas uma camada de informação, a importação vai gerar um objeto da classe `RasterLayer`. 
+
+No seguinte fragmento de código importamos um arquivo proveniente de imagens de fotografias aéreas do Rio de Janeiro. Primero importamos o modelo digital de elevações - MDE (uma banda) e na sequência uma ortofoto digital de três bandas, na combinação vermelho, verde e azul (RGB), usando a função `brick`. 
+
+#### Exercício 03
+
+<div>
+
+```{r map08}
+(nig_MDE <- raster("data/MDE_27444ne_v1.tif"))
+class(nig_MDE)
+```
+
+---
+
+Identifique a extensão geográfica do arquivo, seu tamanho e o _CRS_. Quantas camadas o compõem?
+
+---
+
+#### f- raster multi-camadas ou _multilayers_, funções `brick` e`stack()`
+
+Importamos uma ortofoto, neste caso, o objeto criado será da classe `RasterBrick`.
+
+```{r map09}
+nig_orto <- brick("data/27444ne.tif")
+class(nig_orto)
+```
+
+
+```{r map10}
+nig_orto
+```
+
+---
+
+Identifique a extensão geográfica do arquivo, seu tamanho e o _CRS_. Quantas camadas o compõem, onde está essa informação?
+
+---
+
+<div style="text-align:justify" markdown="1">
+
+É importante lembrar que na leitura destes arquivos, as funções `raster` e `brick` não carregam na memória do computador os valores das células. Os arquivos raster podem ser de grande tamanho e a fim de convervar a memória, os dados são efetivamente lidos quando são requeridos. 
+
+No seguinte código, vemos o tamanho de um arquivo raster em memória e em disco.
+
+<div>
+
+```{r  map11}
+# em memória:
+object.size(nig_orto)
+
+# em disco:
+file.size("data/27444ne.tif")
+```
+
+Uma outra função, `stack()` cria objetos _raster_ multicamadas. Neste caso podemos juntar diversas camadas de um mesmo objeto ou objetos diferentes, mas é necessário que as diversas camadas estejan **no mesmo CRS e com a mesma resolução espacial**.
+\
+---
+\
+
+#### g- Base de dados _PostGis_
+
+<div style="text-align:justify" markdown="1">
+
+A importação de tabelas de bases de dados _PostGis_ é relativamente simples, com tanto que se tenham as informações de acesso requeridas pela base. Até o momento, esse método está implementado apenas em servidores PostGis.
+
+Os seguintes argumentos são necessários:
+
+  - **dbname**: o nome da base de dados PostGis
+  
+  - **host**: endereço da base de dados, se é a máquina local 'localhost'
+
+  - **port**: porta de acesso, o padrão para máquina local é '5432'
+
+  - **user**: nome do usuário, ele deve estar previamente cadastrado na base de dados
+
+  - **password**: a senha correspondente ao usuário cadastrado
+  
+As informações podem ser inseridas diretamente na função `st_read()` ou pode ser criado uma conexão para depois efetuar o chamado. 
+
+Exemplo criando uma conexão:
+  
+    conn <- "PG:dbname='ibgebases' host='localhost' port='5432' user='Beto' password='MinhaSenha'"
+
+o código "PG:" indica que é uma base _PostGis_, na sequência faço a leitura da base de dados:
+
+    minha_tabela <- st_read(conn)
+    
+---
+
+Se todas as configurações estão corretas, acontecerá um dos seguintes casos:
+
+  1- Não existindo nenhuma tabela na base de dados, será emitida uma **mensagem de erro**;
+  
+  2- Se a base de dados tiver apenas uma tabela, ela será lida e importada como o objeto `minha_tabela`, acorde o código anterior;
+  
+  3- Se a base tiver mais de uma tabela, importará a primeira que encontrar e emitirá uma **mensagem de advertência** alertando sobre o fato de existirem mais tabelas.
+
+As tabelas de uma base de dados podem ser listadas com a função `st_layers()`.
+
+    st_layers(conn)
+
+Uma vez identificada a tabela de interesse, ela pode ser importada com a própria função `st_read()`. Neste exemplo importamos uma tabela  chamada "brasil_uf" e a salvamos como "br".
+
+    br <- st_read(conn, "brasil_uf")
+
+Maiores informações sobre opções de leitura e acesso em bases PostGis podem ser consultadas em [PostgreSQL / PostGIS](https://www.gdal.org/drv_pg.html)
+
+<div>
+
+\
+---
+\
+
+
+### 2- Manipulação de dados georreferenciados
+
+---
+
+#### a- Extração de metadados
+
+Algumas funções permitem extrair metadados específicos como nos exemplos comentados a seguir.
+
+```{r map12}
+# extensão espacial dos dados com extent()
+extent(nig_orto)
+
+# máximo valor em y
+extent(nig_orto)[4]
+```
+
+```{r map13}
+# número total de células
+ncell(nig_orto)
+
+# número de camadas
+nlayers(nig_orto)
+```
+
+---
+
+#### b- Identificação ou definição de um _CRS_ em objetos georreferenciados
+
+Para dados tipo raster, a função `raster::crs())`, identifica e/ou aplica um determinado _CRS_. O argumento `asText = TRUE` permite capturar o valor, veja o exemplo genêrico. 
+
+`sgr <- crs(raster1, asText = TRUE)` guardamos na variável "sgr" o _CRS_ do arquivo lido
+
+---
+
+```{r map14}
+# salva o_CRS_do arquivo raster
+crs_nig_MDE <- crs(nig_MDE, asText = TRUE)
+crs_nig_MDE
+```
+
+Após a captura do CRS, ele pode ser aplicado para **definir** o sistema num outro objeto `sf` ou para **transformá-lo** de um sistema para outro. A diferença entre as duas formas veremos no próximo título.
+
+Para **definir** o _CRS_ usamos os seguintes códigos:
+
+`crs(raster2, sgr)`, onde `sgr` é o valor capturado do _CRS_ ou
+
+`crs(raster2) <- sgr`
+
+---
+
+Com dados vetoriais, usamos a função `sf::st_crs(“dados.shp”)` que identifica e/ou aplica um determinado SGR.
+
+O código genêrico para identificar é:
+
+`st_crs(dados1.shp)`, enquanto para definir:
+
+`st_crs(dados1.shp) <- sgr`, ou 
+
+`st_set_crs(dados1.shp) <- sgr` (ver ajuda da função)
+
+---
+
+#### Exercício 04
+
+Definir o objeto "ni_pts" em _CRS_ 31983 (UTM Fuso 23 S), sistema que  esta armazenado no vetor "crs_nig_MDE".
+
+```{r  map15, warning=TRUE}
+st_crs(nig_pts) <- crs_nig_MDE
+head(nig_pts,2)
+```
+
+A mensagem de advertencia na saída do código avisa que **definir** o sistema **não reprojeta e não muda as coordenadas**. Veja que as coordenadas continuam geográficas apesar de ter o _CRS_ como projetado. Para reverter a situação podemos definir novamente o _CRS_ ou ler novamente os dados. 
+
+```{r map16}
+# voltando ao_CRS_oringinal
+st_crs(nig_pts) <- 4326
+head(nig_pts, 2)
+```
+
+---
+
+#### c- Reprojetar ou transformar um objeto georreferenciado
+
+Devemos ter claro a diferença entre  **definir** ou **aplicar** um _CRS_ num determinado dado ou **transformá-lo** em um _CRS_ diferente.
+
+Quando aplicamos um _CRS_, as coordenadas dos dados não mudam, simplemente estamos forçando-as a estar nesse sistema, (caso anterior). 
+
+Quando transformamos as coordenadas, estamos aplicando funções matemáticas que definem novas coordenadas no sistema desejado. Por exemplo, se temos um arquivo de dados em coordenadas geográficas em _CRS_ SAD69, a simples definição de que elas estão em _CRS_ SIRGAS não levará as feições à posição correta, ao contrário, ficaram deslocadas da realidade e não será possível combiná-las com outros dados.
+
+O procedimento correto se faz através de uma transformação usando os parâmetros adequados.
+
+Para vetores, temos a função `sf::st_transform(“dados.shp”, crs)`
+
+Para raster, a função `raster::project_raster(“from.tif”, "to.tif", crs)`
+
+---
+
+#### Exercício 05
+
+Transformar o objeto `nova_ig_pol` para _CRS_ SIRGAS - UTM23S. 
+
+```{r map17}
+nig_pts_UTM23 <- st_transform(nig_pts, crs=31983)
+head(nig_pts_UTM23, 4)
+```
+
+---
+
+#### d- conversão de dataframe com coordenadas em objeto “sf” e viceversa
+
+Podemos ter um dataframe que inclui as coordenadas nos atributos, e queremos passar o mesmo para objeto `sf`, com geometria. Nesse caso, as colunas de coordenadas não tem referência espacial, são simples atributos.
+
+Para efetuar a conversão é importante conhecer previamente o SGR do dataframe, uma vez conhecido ou definido podemos fazer a seguinte conversão usando a função `sf::st_as_sf()`:
+
+**Coordenadas geográficas:**
+
+`st_as_sf(dataframe, coords = c("longitude", "latitude"), CRS = "+proj=longlat +ellps=SIRGAS2000 +no_defs")`, ou
+
+`st_as_sf(dataframe, coords = c("longitude", "latitude"), CRS = 4674)`
+
+**Coordenadas projetadas:**
+
+`st_as_sf(dataframe, coords = c("Leste", "Norte"), CRS = "+proj=utm +zone=24 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”)`, ou
+
+`st_as_sf(dataframe, coords = c("Leste", "Norte"), CRS = 31984)`.
+
+---
+
+#### Exercício 06
+
+```{r map18}
+# leitura de um arquivo csv e verificação da estrutura
+esper_df <- read.csv("data/df_100.csv")
+head(esper_df, 3)
+```
+
+```{r map19}
+# verificação da classe do dado
+class(esper_df)
+```
+
+Transformamos os dados num objeto "sf", de forma de criar a geometria e criar cartogramas ou mapas com eles.
+
+```{r map20}
+esper_sf <- st_as_sf(esper_df, coords = c("Long", "Lat"), crs= 4674)
+head(esper_sf, 2)
+```
+
+Para verificar que o objeto agora tem o atributo espacial vamos fazer um gráfico simples.
+
+```{r map21}
+plot(esper_sf["C1"], 
+     main = "Dataframe transformado em objeto sf", 
+     axes =T)
+```
+
+---
+
+#### Exercício 07
+
+Importar os mesmos dados mas indicando a geometria com as coordenadas projetadas (verifique as colunas e nomes correspondentes).
+
+---
+
+No caso inverso, passar um objeto “sf” para dataframe com coordenadas, usamos a função `sf::st_write()`. Para incluir as coordenadas na saída os argumentos são:
+
+`st_write(dado_sf, "dado_novo.csv", layer_options = "GEOMETRY=AS_XY")`
+
+A função `write_sf()` também grava, mas em forma "silenciosa", ou seja não emite mensagem de gravação e sobre-escreve o arquivo se o nome já existe;
+
+---
+
+#### Exercício 08
+
+A partir do objeto criado vamos salvar os registros num novo dataframe, preservando a geometria
+
+```{r map22}
+st_write(esper_sf,                       # dados a gravar
+         "data/esper_novo.csv",        # novo arquivo com caminho de garavação
+         layer_options = "GEOMETRY=AS_XY", # opção para salvar a geometria
+         delete_dsn=TRUE)               # se o nome já existe, apague o arquivo primeiro
+
+esper_novo <- read.csv("data/esper_novo.csv") # ler o arquivo gravado
+head(esper_novo)
+```
+
+
+---
+
+FIM da segunda parte
+
+---
+
+CREDITOS: 
+
+  +  Edzer Pebesma (2018). sf: Simple Features for R. R package version 0.6-3.
+  https://CRAN.R-project.org/package=sf
+
+  +  Robert J. Hijmans (2017). raster: Geographic Data Analysis and Modeling. R package version
+  2.6-7. https://CRAN.R-project.org/package=raster
+
+  +   Hadley Wickham (2017). tidyverse: Easily Install and Load the 'Tidyverse'. R package version
+  1.2.1. https://CRAN.R-project.org/package=tidyverse
+
+  + Fonte dos dados: o próprio autor do tutorial ou extraídos do portal IBGE: <https://www.ibge.gov.br/>
+  
+  ---
+  
