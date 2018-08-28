@@ -3,7 +3,8 @@
 ### Walter Humberto Subiza Piña - 2018
 
 email:walter.pina1954@gmail.com
-@humbertosubiza
+
+twitter: @humbertosubiza
  
 Estes tutoriais, de carater introdutório, estão baseados principalmente nas bibliotecas `sf`, `raster` para análise espacial de dados georreferenciados e algumas especificas para manipulação e visualização desses dados. As _vignettes_ dos pacotes além da documentação mencionada no final de cada tutorial devem consultar-se para aprofundar nos temas expostos.
 
@@ -15,6 +16,7 @@ Em 25 de agosto de 2018, ficam disponiveis as duas primeiras partes de um total 
 Em 28 de agosto de 2018 ficou disponível a terceria parte de um total de 4 (mapas_com_R_03),
 
 Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
+
 ---
 
 ## Indice
