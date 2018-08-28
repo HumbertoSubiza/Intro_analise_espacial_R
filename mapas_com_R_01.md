@@ -1,20 +1,13 @@
 ---
 title: "Análise e visualização de dados espaciais com R - 1a. Parte"
 author: "Walter Humberto Subiza Piña"
-date: "`r format(Sys.Date())`"
+date: "2018-08-28"
 output: 
   html_document:
     keep_md: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo      = TRUE, 
-                      warning   = FALSE, 
-                      message   = FALSE, 
-                      fig.path  = paste0(getwd(), "/figuras/"), 
-                      fig.ext   = 'png',
-                      fig.align = 'center')
-```
+
 
 
 
@@ -372,23 +365,42 @@ As seguintes tabelas resumem os principais SGR, com coordenadas geográficas e p
 
 ---
 
-```{r tabela01, echo=FALSE}
-CRS_geo <- tibble::tribble(
-             ~Nome, ~"código EPSG", ~"Definição formato Proj.4",  ~Observações,
-  "Córrego Alegre",    4225, "“+proj=longlat +ellps=intl +towgs84=-206,172,-6,0,0,0,0 +no_defs”",    "Obsoleto",
-           "SAD69",    4291,  "“+proj=longlat +ellps=GRS67 +towgs84=-57,1,-41,0,0,0,0 +no_defs”",    "Obsoleto",
-           "WGS84",    4326,                             "“+proj=longlat +datum=WGS84 +no_defs”", "Não oficial",
-      "SIRGAS2000",    4674,      "“+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs”",     "Oficial"
-  )
-
-require(knitr)
-require(kableExtra)
-kable_styling(
-              kable(CRS_geo, digits = 3, row.names = FALSE, align = "c",
-              caption = NULL, format = "html"),
-        bootstrap_options = c("striped", "hover", "condensed"),
-        position = "center", full_width = FALSE) 
-```
+<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:center;"> Nome </th>
+   <th style="text-align:center;"> código EPSG </th>
+   <th style="text-align:center;"> Definição formato Proj.4 </th>
+   <th style="text-align:center;"> Observações </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:center;"> Córrego Alegre </td>
+   <td style="text-align:center;"> 4225 </td>
+   <td style="text-align:center;"> “+proj=longlat +ellps=intl +towgs84=-206,172,-6,0,0,0,0 +no_defs” </td>
+   <td style="text-align:center;"> Obsoleto </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> SAD69 </td>
+   <td style="text-align:center;"> 4291 </td>
+   <td style="text-align:center;"> “+proj=longlat +ellps=GRS67 +towgs84=-57,1,-41,0,0,0,0 +no_defs” </td>
+   <td style="text-align:center;"> Obsoleto </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> WGS84 </td>
+   <td style="text-align:center;"> 4326 </td>
+   <td style="text-align:center;"> “+proj=longlat +datum=WGS84 +no_defs” </td>
+   <td style="text-align:center;"> Não oficial </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> SIRGAS2000 </td>
+   <td style="text-align:center;"> 4674 </td>
+   <td style="text-align:center;"> “+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs” </td>
+   <td style="text-align:center;"> Oficial </td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
@@ -396,30 +408,84 @@ kable_styling(
 
 ---
 
-```{r tabela02, echo=FALSE}
-CRS_UTM <- tibble::tribble(
-      ~Nome, ~"código EPSG", ~"Definição formato Proj.4",    ~Observações,
-  "UTM-18S",   31978, "“+proj=utm +zone=18 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 18 Sul",
-  "UTM-19S",   31979, "“+proj=utm +zone=19 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 19 Sul",
-  "UTM-20S",   31980, "“+proj=utm +zone=20 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 20 Sul",
-  "UTM-21S",   31981, "“+proj=utm +zone=21 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 21 Sul",
-  "UTM-22S",   31982, "“+proj=utm +zone=22 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 22 Sul",
-  "UTM-23S",   31983, "“+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 23 Sul",
-  "UTM-24S",   31984, "“+proj=utm +zone=24 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 24 Sul",
-  "UTM-25S",   31985, "“+proj=utm +zone=25 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 25 Sul",
-  "UTM-19N",   31973,        "“+proj=utm +zone=19 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”", "Fuso 19 Norte",
-  "UTM-20N",   31974,        "“+proj=utm +zone=20 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”", "Fuso 20 Norte",
-  "UTM-21N",   31975,        "“+proj=utm +zone=21 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”", "Fuso 21 Norte"
-  )
-
-require(knitr)
-require(kableExtra)
-kable_styling(
-              kable(CRS_UTM, digits = 3, row.names = FALSE, align = "c",
-              caption = NULL, format = "html"),
-        bootstrap_options = c("striped", "hover", "condensed"),
-        position = "center", full_width = FALSE) 
-```
+<table class="table table-striped table-hover table-condensed" style="width: auto !important; margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:center;"> Nome </th>
+   <th style="text-align:center;"> código EPSG </th>
+   <th style="text-align:center;"> Definição formato Proj.4 </th>
+   <th style="text-align:center;"> Observações </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:center;"> UTM-18S </td>
+   <td style="text-align:center;"> 31978 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=18 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 18 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-19S </td>
+   <td style="text-align:center;"> 31979 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=19 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 19 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-20S </td>
+   <td style="text-align:center;"> 31980 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=20 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 20 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-21S </td>
+   <td style="text-align:center;"> 31981 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=21 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 21 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-22S </td>
+   <td style="text-align:center;"> 31982 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=22 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 22 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-23S </td>
+   <td style="text-align:center;"> 31983 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 23 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-24S </td>
+   <td style="text-align:center;"> 31984 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=24 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 24 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-25S </td>
+   <td style="text-align:center;"> 31985 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=25 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 25 Sul </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-19N </td>
+   <td style="text-align:center;"> 31973 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=19 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 19 Norte </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-20N </td>
+   <td style="text-align:center;"> 31974 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=20 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 20 Norte </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> UTM-21N </td>
+   <td style="text-align:center;"> 31975 </td>
+   <td style="text-align:center;"> “+proj=utm +zone=21 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs” </td>
+   <td style="text-align:center;"> Fuso 21 Norte </td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
