@@ -2,9 +2,7 @@
 title: "Análise e visualização de dados espaciais com R - 1a. Parte"
 author: "Walter Humberto Subiza Piña"
 date: "`r format(Sys.Date())`"
-output: 
-  html_document:
-    keep_md: true
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
