@@ -13,7 +13,7 @@ Os dados para reproduzir os exercicios encontram-se na pasta "/data" e devem ser
 
 Em 25 de agosto de 2018, ficam disponiveis as duas primeiras partes de um total de 4 (mapas_com_R_01 e mapas_com_R_02).
 
-Em 28 de agosto de 2018 ficou disponível a terceria parte de um total de 4 (mapas_com_R_03),
+Em 28 de agosto de 2018 ficou disponível a terceira parte de um total de 4 (mapas_com_R_03),
 
 Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
 
