@@ -1,0 +1,484 @@
+---
+title: "Análise e visualização de dados espaciais com R - 3a. Parte"
+author: "Walter Humberto Subiza Piña"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+As seguintes bibliotecas do _R_ devem estar instaladas e carregadas para a correta execução dos códigos na oficina.
+
+```{r libraries}
+library(sf)
+library(tmap)
+library(raster)
+library(ggplot2)
+library(ggmap)
+```
+
+### Visualização de dados georreferenciados
+
+### Indice
+
+  1- Dados vetoriais
+  
+  - Quadrícula geográfica e projetada
+  
+---
+  
+  a - Função Base `plot()`
+  
+  - Cartogramas com a geometria dos objetos (`sfc`)
+    
+  - Cartogramas usando atributos (dataframe classe `sf`)
+
+---
+  
+  b - `ggplot2`
+
+---
+  
+  c - `tmap`
+
+---
+  
+  2 - Dados matriciais
+  
+  a - `plot()` e `plotRGB()`
+
+---
+  
+  b - Google Maps: `ggmap()` e `qmap()`
+
+Dados necessários para reprodução do tutorial e que devem estar na pasta "/data":
+
+  + "Brasil_Uf.shp" e arquivos complementares
+  
+  + "27444ne.tif"
+  
+  + "MDE_nova_ig_class.tif"
+
+Baixar os dados de: [_dropbox_](https://www.dropbox.com/sh/2gmhfx1ycos0ywh/AAAjVB6T6oygAq6nmFQEMUMNa?dl=0).
+
+\
+---
+\
+
+### Visualização de dados georreferenciados
+
+#### 1- Dados vetoriais
+
+<div style="text-align:justify" markdown="1">
+
+Diversas bibliotecas podem ser empregadas para produzir cartogramas a partir de objetos `sf`, a mais simples é a função de Base _R_ `plot()`, além desta, outros pacotes de visualização vão incorporando os objetos `sf` nas suas funções. Apresentam-se além de `plot()` os pacotes `ggplot2`, `tmap` e `ggmap`.
+
+#### Quadrícula geográfica e projetada
+
+Como já visto, a relação da feição simples com sua localização espacial se dá através do atributo geometria. Os objetos `sf` tem a geometria contida na coluna `geometry` de classe `sfc` e tipo "lista", enquanto os atributos da feição (se houver) estão nas colunas do dataframe de classe `sf`e tipo "data.frame". 
+
+Ambos elementos, geometria e atributos, podem servir para produzir mapas ou cartogramas em _R_. Assim sendo, podemos usar apenas a geometria do objeto e adicionar elementos como simbolos, cores, etc, ou usar os atributos para apresentar aspectos diversos dos nossos dados. 
+
+Para representar uma geometria de coordenadas geográficas, a biblioteca `sf` utiliza por padrão uma projeção equi-retangular que faz que, no centro da projeção, uma unidade de latitude tenha o mesmo comprimento de uma unidade de longitude. Para sistemas projetados, as coordenadas leste e norte são mapeadas nos eixos x e y, mantendo da mesma forma a conformidade no centro da projeção.
+
+Sendo necessário um maior rigor cartográfico na representação, ou quando a área é de grande extensão, podemos gerar uma quadrícula de longitudes e latitudes de igual espaciamento mas comprimento diferente  dependendo da sua latitude. 
+
+A função específica que genera a quadrícula é `st_graticule()` e pode servir para gerar a quadrícula para posterior uso, ou pode ser usada em conjunto com `plot()`.  Vejamos os dois casos com o mapa do Brasil, usando uma projeção cônica conforme de Lambert.
+
+</div>
+
+---
+
+```{r map23}
+# Importação do dado
+br <- st_read("data/Brasil_Uf.shp")
+
+# projeção Cônica Conforme de Lambert modificada, com paralelos 0 e -25
+proj_ccl <- "+proj=lcc +lat_1=0 +lat_2=-25 +lat_0=-32 +lon_0=-50 +x_0=0 +y_0=0 +ellps=aust_SA +units=m +no_defs"
+
+# transformação para o sistema Lambert definido
+br_ccl <- st_transform(br, proj_ccl)
+
+# gerar a quadrícula apenas
+quad <- st_graticule(br_ccl)
+
+# mapa da quadrícula
+plot(st_geometry(quad), axes = T)
+```
+
+<div style="text-align:justify" markdown="1">
+
+Na quadrícula anterior, as coordenadas são as de projeção e a quadrícula é cortada na extensão do objeto que a gerou ("br_ccl"). 
+
+Quando a quadrícula é gerada dentro da função `plot()`, ela é extendida até o limite do mapa e podemos adicionar eixos coordenados, veja no seguinte mapa.
+
+</div>
+
+```{r map24}
+plot(br_ccl["NM_REGIAO"],              # cartograma com a variável "NM_REGIAO"
+     main       = "Regiões do Brasil", # titulo do cartograma
+     graticule  = T,                   # gerar quadricula
+     axes       = T,                   # plotar eixos
+     reset      = F,                   # não reiniciar o mapa
+     key.pos    = 1,                   # posição ma legenda: eixo 1
+     key.width  = lcm(1.3),            # largura da escala em cm
+     key.length = 1)                   # comprimento da escala: 1 é todo o eixo
+
+plot(st_centroid(br_ccl),              # calcule e grafique os centroides
+     pch = 19,                         # simbolo numero 19
+     col = "black",                    # cor preta
+     add = T)                          # adicionar no mapa anterior
+```
+
+---
+
+#### a- Função base `plot()`
+
+  - Cartogramas com a geometria dos objetos (`sfc`)
+
+<div style="text-align:justify" markdown="1">
+
+A função `st_geometry` permite fazer um cartograma diretamente usando o objeto `sfc` ou epodemos armazenara a geometria numa variavél para uso posterior. No exemplo que segue, vamos ler um arquivo camada contendo os limites do Brasil e suas UFs e fazer um cartograma apenas com a geometria. Para adicionar mais informação no mapa feito com a função `plot()`, use o argumento `reset = FALSE` no primer mapa e `add = TRUE` nas seguintes geometrias adicionadas como pontos, linhas, anotações, simbolos, cores, etc.
+
+</div>
+
+```{r map25}
+# cartograma usando a função st_geometry()
+plot(st_geometry(br), axes  = T)
+```
+
+---
+
+O pacote `sf` tem uma função específica para escala de cores com tons entre azul, rosa e amarelo. Veja no exemplo em que a geometria é armazenada numa variável para depois ser usada.
+
+```{r map26}
+# armazeno a geometria dos poligonos na variável br_pol
+br_pol <- st_geometry(br)
+
+plot(br_pol, 
+     col       = sf.colors(27, categorical = T), #  função sf.colors com 27 cores 
+     axes      = T,      # graficar os eixos
+     graticule = T)  # e a quadricula   
+
+# adiciono centroides de cada unidade da federação
+plot(st_centroid(br_pol), pch = 19, col = "black", add = T)
+
+```
+
+Note que automáticamente foram colocados as coordenadas e os símbolos adequados ao _CRS_ usado (SIRGAS2000), usando a projeção equirretangular.
+
+---
+
+  - Cartogramas usando atributos (dataframe classe `sf`)
+
+<div style="text-align:justify" markdown="1">
+
+Quando fazemos um cartograma com um objeto que tem atributos, por padrão a função `plot()` faz um cartograma por cada atributo presente no objeto `sf`. No caso apresentado, o dataframe tem 5 atributos, pelo que serão gerados 5 mapas. O máximo de atributos a graficar está fixado em 10, mas esse número pode ser modificado para valores maiores o menores com o argumento `max.plot`. Já o argumento global `options(sf_max.plot = 6)` controla a quantidade máxima de mapas a graficar na sessão em andamento, neste exemplo 6. 
+
+Os atributos a mapear ou sua quantidade também podem ser definidos através de uma seleção no dataframe com parentesis reto, "[ ]". Veja no exemplo seguinte em que são selecionadas as colunas 2 a 5.
+
+</div>
+
+```{r map27}
+# mapa com os atributos 2 a 5, cores em forma automática
+plot(br[2:5])
+```
+
+<div style="text-align:justify" markdown="1">
+
+Quando um determinado atributo é escolhido para fazer um mapa, é criada uma barra de cores. A posição da barra pode ser definida ou ainda pode-se eliminar usando `key.pos = NULL`. 
+
+Os intervalos de classe das cores podem ser estabelecidos com `breaks`e n`breaks` que também pode ser usado para definir um método específico. Mais informações na _vignette 5. Plotting simple features_.
+
+Veja os comentários no seguinte exemplo.
+
+</div>
+
+---
+
+```{r map28}
+plot(br["AREA"],
+     key.pos    = 2,                 # posição da escala, no eixo 2 (esquerdo)
+     axes       = T,                # mostrar eixos coordenados
+     graticule  = T,               # graficar a quadícula
+     key.width  = lcm(1.5),        # largura da escala em cm
+     key.length = 1,               # comprimento da barra, 1 é todo o lado
+     breaks     = "quantile",      # cores separados por quantís
+     main       = "Area das UF, cores em quantís",
+     reset      = F)
+plot(st_centroid(br), 
+     pch = 19, 
+     col = "black", 
+     add = T)
+```
+
+---
+
+\
+---
+\
+
+#### b- `ggplot2`
+
+<div style="text-align:justify" markdown="1">
+
+A partir da versão 3.0.0 é possível visualizar objetos `sf`, usando a função `geom_sf`. Esta função é genérica já que dependendo do tipo de objeto a ser representado (ponto, limha ou polígono), é a geometria que será obtida. Veremos um exemplo em que a mesma função é usada com duas geometrias diferentes, uma de polígono e uma outra de ponto. Veja e analise os exemplos que seguem, comparando o código com o correspondente código de `plot()`.
+
+</div>
+
+---
+
+```{r map29}
+br_regioes <- ggplot()                       +
+  geom_sf(data = br,  aes(fill = NM_REGIAO)) +
+  geom_sf(data = st_centroid(br))            +
+  theme_light() 
+
+br_regioes
+```
+
+Cartogramas de agrupamento por regiões.
+
+---
+
+```{r map 30, fig.height=7, fig.width=9}
+br_regioes                                      +
+    facet_wrap(~NM_REGIAO, ncol = 3           ) +
+    theme(legend.position="none")
+```
+
+
+#### c - tmap
+
+<div style="text-align:justify" markdown="1">
+
+Esse pacote oferece uma opção mais simples, num estilo _Grammar of Graphics_ e está orientado a produção e exploração rápida de mapas. Na última versão está usando diretamente os objetos `sf`, sem necessidade de transformação para objeto `sp` como era requerido anteriormente.
+
+</div>
+
+Para plotar uma camada raster use:
+
+    tm_shape("raster") + tm_rgb()
+
+Para vetores:
+
+    tm_shape("poligono") +   tm_polygons()
+
+As varias camadas adicionadas podem ser sobrepostas usando o “+”, sendo que devem estar no mesmo SGR.
+
+    tm_shape("raster")   + 
+    tm_rgb()             +
+    tm_shape("poligono") +
+    tm_polygons()        + 
+    tm_shape("pontos")   +
+    tm_dots()
+
+---
+
+```{r map31}
+# guardar a geometria dos centroides como pontos
+br_centro <- st_geometry(st_centroid(br))
+
+# mapa com tmap
+tm_shape(br) +
+  tm_polygons(col         = "NM_REGIAO",
+              palette     = sf.colors(4),
+              border.col  = "black",
+              legend.show = T,
+              title       = "Regiões do Brasil") +
+tm_shape(br_centro)+
+  tm_dots(size = 0.5) 
+```
+
+ `tmap` tem também opção de agrupamento de feições e de estilos, veja o clássico no seguinte exemplo.
+ 
+---
+
+```{r map32}
+tmap_style("classic")                            +
+tm_shape(br)                                     +
+  tm_polygons(col         = "NM_REGIAO",
+              palette     = sf.colors(4),
+              border.col  = "black",
+              legend.show = F,
+              title       = "Regiões do Brasil") +
+  tm_facets(by     = "NM_REGIAO")                +
+  tm_bubbles(size  = "AREA", 
+             col   = "red", 
+             scale = 3,
+             legend.size.is.portrait =T)
+```
+
+---
+
+
+### 2- Dados matriciais
+
+#### a - `plot()` e `plotRGB()`
+
+<div style="text-align:justify" markdown="1">
+
+Até aqui vimos apenas mapas com dados vetoriais, no caso de objetos matriciais podemos usar a função `plot()` para visualizar dados de uma camada. No caso de dados multicamadas, a  função `raster::plotRGB` nos permite ver os dados na combinação RGB da cor verdadeira. Confira o exemplo a seguir.
+
+</div>
+
+---
+
+```{r map33, fig.height=6, fig.width=7}
+nig_orto <- brick("data/27444ne.tif")
+
+plotRGB(nig_orto, 
+        axes    = T, 
+        bgalpha = 0)
+```
+
+No caso de uma única camada:
+
+```{r map34}
+# leitura do arquivo
+ni_mde <- raster("data/MDE_nova_ig_class.tif")
+
+# cartograma
+plot(ni_mde,
+     main = "Elevações no município de Nova Iguaçú")
+
+```
+
+A função auxiliar `click()` nos permite interagir com o gráfico e extrair valores, tanto para dados de camada única como de multicamada. 
+
+---
+
+#### b - Google maps: `ggmap()` e `qmap()`
+
+<div style="text-align:justify" markdown="1">
+
+Para gerar um mapa extraido de Google Maps com `ggmap` são necessárias três etapas:
+
+1- **estabelecer uma coordenada geografica central aproximada**, que pode ser armazenada numa variável;
+
+2- **baixar o mapa** com a função `ggmap::get_map()`. Nesta etapa especificam-se dois argumentos na função: a coordenada ou variável onde esta armazenada e o zoom que desejamos (variando entre 3, zoom mínimo e 21 zoom máximo);
+
+3- **visualizar** com `ggmap()` 
+
+O resultado do segundo passo com `getmap()`, é um objeto raster que pode ser combinado com funções `ggplot` para obter mapas mais elaborados, veja por exemplo [ggmap : Spatial Visualization with
+ggplot2 - David Kahle e Hadley Wickham](http://stat405.had.co.nz/ggmap.pdf)
+
+Vamos fazer um mapa rápido da região central do Rio de Janeiro.
+
+---
+
+</div>
+
+```{r map35}
+# Estabelecemos as coordenadas do centro de nosso mapa
+Rio <-c(lon = -43.2751, lat = -22.9235)
+
+# Extraemos o mapa de Google Maps, especificando um zoom a sua escolha
+mapRio <- get_map(location = Rio, zoom = 11)
+
+#Visualizamos o mapa com ggpmap
+ggmap(mapRio) # + coord_map("mercator")
+```
+
+---
+
+<div style="text-align:justify" markdown="1">
+
+Assim como `ggplot()` tem uma função para plotar rápidamente (`qplot()`), `ggmap()` tem a função `qmap()` para visualizações elementares. Ela realiza as duas últimas etapas num passo só. Os argumentos necessarios para gerar o mapa são apenas as coordenadas e o zoom, sendo que a visualização e automática.
+
+Note que com essa função rápida, as possibilidades de personalizar ou adicionar elementos e mais limitada. O exemplo acima apresentado com `qmap()` seria, em apenas uma linha:
+
+</div>
+
+```{r, map36}
+qmap(Rio, zoom = 11)
+```
+
+---
+
+EXERCICIO: estabelecer coordenadas da sua cidade natal, extrair o mapa e visualizar
+
+---
+
+#### Personalizão de `ggmap`
+
+<div style="text-align:justify" markdown="1">
+
+Podemos gerar diversos mapas usando as opcções disponíveis no `ggmap::get_map()`. Algumas fontes como "cloudmade" e opções de pesquisa no google, exigem chaves ("key") que sao facilmente obtidas através de um cadastro no site especificado, mas não pode ser compartilhada, fique atento as restrições de compartilhamento das chaves.
+
+</div>
+
+As principais opções de `getmap()` são:
+
+**get_map**(
+
+**location** = c(lon = ..., lat = ...), 
+
+**zoom** = "auto",
+
+**scale** = "auto", 
+
+**maptype** = c("terrain", "terrain-background", "satellite","roadmap", "hybrid", "toner", "watercolor", "terrain-labels", "terrain-lines", "toner-2010", "toner-2011", "toner-background", "toner-hybrid", "toner-labels", "toner-lines", "toner-lite"), 
+
+**source** = c("google", "osm", "stamen", "cloudmade")
+
+**filename**  = "ggmapTemp", 
+
+**crop**      = TRUE, 
+
+**color**     = c("color", "bw")) 
+
+... veja **?ggmap**.
+
+
+Usaremos algumas das opcções na sequencia.
+
+---
+
+```{r, map37}
+#  Obter o mapa, tipo Stamen
+mapRioStamen <- get_map(location = Rio, 
+                       zoom     = 11, 
+                       source   = "stamen", 
+                       maptype  = "toner")
+
+# Visualize o mapa
+ggmap(mapRioStamen)
+```
+
+\
+---
+\
+
+FIM da terceira parte
+
+---
+
+---
+
+CREDITOS: 
+
+  +  Edzer Pebesma (2018). sf: Simple Features for R. R package version 0.6-3.
+  https://CRAN.R-project.org/package=sf
+
+  +  Robert J. Hijmans (2017). raster: Geographic Data Analysis and Modeling. R package version
+  2.6-7. https://CRAN.R-project.org/package=raster
+
+  + H. Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+  Tennekes M (2018). “tmap: Thematic Maps in R.” _Journal of Statistical Software_, *84*(6), 1-39.
+doi: 10.18637/jss.v084.i06 (URL: http://doi.org/10.18637/jss.v084.i06).
+
+  +  D. Kahle and H. Wickham. ggmap: Spatial Visualization with ggplot2. The R Journal, 5(1),
+  144-161. URL http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf
+
+  + Fonte dos dados: o próprio autor do tutorial ou extraídos do portal IBGE: <https://www.ibge.gov.br/>
+  
+  ---
+  
