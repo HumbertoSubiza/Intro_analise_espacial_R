@@ -19,7 +19,15 @@ Comentários, criticas e sugestões podem ser encaminhados ao email mencionado a
 
 ---
 
+<div style="text-align:center" markdown="1">
+
+![Brasil](map24-1.png)
+
+---
+
 ## Indice
+
+</div>
 
 ---
 
@@ -202,7 +210,7 @@ Determinar que ruas compõem o bairro de botafogo e estabelecer a que distância
 
  Insumos:
  
-   -    - logradouros municipio RJ (eixo_logra.shp) - [Prefeitura de Rio de Janeiro](http://pgeo3.rio.rj.gov.br/arcgis/rest/services/Cartografia/Vias/MapServer/0)
+  - logradouros municipio RJ (eixo_logra.shp) - [Prefeitura de Rio de Janeiro](http://pgeo3.rio.rj.gov.br/arcgis/rest/services/Cartografia/Vias/MapServer/0)
    
    - bairros do RJ (Botafogo e Urca) (bairros_rj.shp) - Arquivo própio do autor, com limites de alguns bairros de RJ.
    
