@@ -4,13 +4,13 @@
 
 walter.pina1954@gmail.com
  
-Estes tutorias, de carater introdutório, estao baseados principalmente nas bibliotecas `sf`, `raster` para analise espacial de dados georreferenciados e algumas especificas para manipulação e visualização desses dados. As _vignettes_ dos pacotes alem da documentacao mencionada no final de cada tutorial devem consultar-se para aprofundar nos temas expostos.
+Estes tutoriais, de carater introdutório, estão baseados principalmente nas bibliotecas `sf`, `raster` para análise espacial de dados georreferenciados e algumas especificas para manipulação e visualização desses dados. As _vignettes_ dos pacotes além da documentação mencionada no final de cada tutorial devem consultar-se para aprofundar nos temas expostos.
 
-Os dados para reproduzir os exercicios encontram-se na pasta "/data" e devem ser baixados de [_dropbox_](https://www.dropbox.com/sh/2gmhfx1ycos0ywh/AAAjVB6T6oygAq6nmFQEMUMNa?dl=0). A pasta completa deve estar no seu diretorio de trabalho.
+Os dados para reproduzir os exercicios encontram-se na pasta "/data" e devem ser baixados de [_dropbox_](https://www.dropbox.com/sh/2gmhfx1ycos0ywh/AAAjVB6T6oygAq6nmFQEMUMNa?dl=0). A pasta completa deve estar no seu diretório de trabalho.
 
 
 Na data de hoje, 25 de agosto de 2018, ficam disponiveis as duas primeiras partes de um total de 4 (mapas_com_R_01 e mapas_com_R_02).
-Comentarios, criticas e sugestoes podem ser encaminhados ao email mencionado acimae serão muito apreciados.
+Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
 
 ---
 
