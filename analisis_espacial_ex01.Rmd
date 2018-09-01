@@ -1,0 +1,247 @@
+---
+title: ''
+author: "Walter Humberto Subiza Pina"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE,
+                      message   = FALSE,
+                      warning   = FALSE,
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+## Exercício 01 de análise espacial
+
+## Dados vetoriais
+
+
+```{r libraries}
+# bibliotecas necessárias
+library(sf)
+library(raster)
+library(tidyverse)
+```
+
+### Objetivo:
+
+#### A partir de um arquivo de ruas do RJ, separar as que compõem o bairro de botafogo e calcular a que distância se encontra cada uma da UPA Botafogo, que se encontra localizada na rua São Clemente proxima do metrô do mesmo bairro. Finalmente fazer um cartograma com as distâncias encontradas. Como didática, serão empregadas três funções da biblioteca `sf` para separar as ruas. Use a ajuda e veja que faz cada função e os diversos argumentos que podemos definir.
+
+
+ Insumos:
+ 
+   - logradouros bairro Botafogo (ruas_zona_sudeste.shp) - [Prefeitura de Rio de Janeiro](http://pgeo3.rio.rj.gov.br/arcgis/rest/services/Cartografia/Vias/MapServer/0)
+   
+   - bairros do RJ (Botafogo e Urca) (bairros_rj.shp) - Arquivo própio do autor, com limites de alguns bairros de RJ.
+   
+   - UPA de botafogo (upa_botafogo.shp) - Coordenadas aproximadas da UPA localizada na rua São Clemente do Bairro de Botafogo, RJ.
+   
+---
+
+#### Tarefa 1- Carregar arquivo de camadas com as ruas da região sudeste do municipio de RJ.
+
+```{r spatial_01}
+ruas_rj <- st_read("data/ruas_zona_sudeste.shp")
+head(ruas_rj)
+```
+
+Qual a quantidade de feições, tipo de geometria e SGR?
+
+##### Desafio: fazer cartograma do objeto com `plot()`, escolher variável e cor, colocar um título.
+
+---
+
+#### Tarefa 2 - Carregar arquivo de bairros da zona sul do município do RJ.
+
+```{r spatial_02}
+# leio rodovias
+bairros <- st_read("data/bairros_rj.shp", options = "ENCODING=windows1252")
+head(bairros)
+```
+
+Qual a quantidade de feições, tipo de geometria e SGR?
+
+##### Desafio: plotar o objeto, escolher variável e cor, colocar título.
+
+---
+
+#### Tarefa 3 - Carregar arquivo com a localização da UPA
+
+Vamos importar a feição que representa a localização da UPA Botafogo, como nas anteriores importações, veja as caraterísticas principais do dado.
+
+```{r spatial_03}
+upa <- st_read("data/upa.shp", options = "ENCODING=UTF-8")
+head(upa)
+```
+
+---
+
+Os três arquivos importados tem diferenças nos seus SGR. Veja a tabela a seguir.
+
+| objeto | _CRS_   | EPSG | Elipsoide|
+|--------|-------|------|----------|
+|ruas_rj | geográficas (long, lat)| NA | GRS80|
+|bairros| projetadas (UTM-23)| NA |GRS80|
+| upa|  projetadas (UTM-23)|32723|WGS84|
+
+---
+
+Quando fazemos operações espaciais devemos transformar todos nossos objeto para um mesmo SGR ou _CRS_. Para cálculos que incluam quantidades métricas, usar sempre sistemas projetados (coordenadas planas).
+
+Para trabalhar no sistema SIRGAS2000 fuso 23, que é o sistema de coordenadas planas oficial para a área em estudo, precisamos fazer as sequintes transformações:
+
+  + o objeto "ruas_rj" que está em CRS geográficos, precisamos apenas passar suas coordenadas para planas, já que o elipsoide GRS80 é o correto para o sistema SIRGAS.
+  
+  + o objeto "bairros" já está no SGR correto, apenas temos de inserir o número EPSG, 31983
+  
+  + o objeto "upa", está em coordenadas planas UTM fuso 23, mas seu EPSG é 32723, que corresponde ao sistema WGS84 e tem de ser transformado para 31983, SIRGAS2000.
+  
+Algumas operações podem parecer desnecessárias, por exemplo, a transformação entre os sistemas WGS84 e SIRGAS tem parâmetros nulos, ou seja, não existe diferença a este nível de precisão, mas muitas funções espaciais checam se os sistemas dos objetos que trabalhamos são os mesmos o que poderia dar algum problema depois. Por outro lado a compatibilização dos SGR nos dá a confiança nos resultados obtidos.  
+
+Veja as transformações feitas e os resultados, procure o _CRS_ e o EPSG.
+
+
+```{r spatial_04}
+ruas_rj_f23 <- st_transform(ruas_rj, crs = 31983)
+
+st_crs(bairros) <- 31983
+
+upa <- st_transform(upa, crs = 31983)
+```
+
+```{r spatial_04b}
+head(ruas_rj_f23,2)
+head(bairros,2)
+head(upa)
+```
+
+
+---
+
+#### Tarefa 4 - Separar ruas de Botafogo
+
+#### Intersects
+
+Vamos começar a análise solicitada. Usamos `intersects()` para separar as ruas de Botafogo. Os argumentos são o polígono do bairro e as ruas da zona sudeste de RJ.
+
+```{r spatial_05}
+# separar bairro botafogo
+botafogo <- bairros[1,]
+
+#fazer interseção e criar objeto com ruas do bairro
+inter01 <- st_intersects(botafogo, ruas_rj_f23)[[1]]
+ruas_botafogo01 <- ruas_rj_f23 [inter01,]
+
+#plotar bairro e ruas intersectadas
+plot(botafogo["id"], 
+     col   = "lightblue", 
+     reset = F,
+     main  = "Ruas extraidas com st_intersects")
+
+plot(ruas_botafogo01["NM_TXTMEMO"], 
+     col = "red", 
+     add = T)
+```
+
+---
+
+#### Contains
+
+Uma outra forma de separar as ruas é usando `contains()`. Veja a diferença entre ambas as funcoes no cartograma.
+
+```{r spatial_06}
+
+#fazer interseção e criar objeto com ruas do bairro
+contains01 <- st_contains(botafogo, ruas_rj_f23)[[1]]
+ruas_botafogo02 <- ruas_rj_f23 [contains01,]
+
+#plotar bairro e ruas intersectadas e contidas
+plot(botafogo["id"], 
+     col   = "lightblue", 
+     reset = F,
+     main  = "st_intersects = vermelho e st_contains = azul")
+
+plot(ruas_botafogo01["NM_TXTMEMO"], 
+     col = "red", 
+     add = T,
+     lwd = 2)
+
+plot(ruas_botafogo02["NM_TXTMEMO"], 
+     col = "blue", 
+     add = T, 
+     lwd = 2)
+```
+
+---
+
+#### Clipping
+
+A funcão de corte `st_intersection()` permite cortar feições a partir de um outro objeto, como neste caso o polígono do bairro e será a que usaremos para resolver o exercício.
+
+```{r spatial_07}
+#fazer interseção e criar objeto com ruas do bairro
+ruas_botafogo <- st_intersection(botafogo, ruas_rj_f23)
+
+#plotar bairro e ruas intersectadas e contidas
+plot(st_geometry(botafogo), 
+     col    = "lightgrey", 
+     border = "black", 
+     axes   = T,
+     main   = "Ruas do bairro Botafogo",
+     reset  = F)
+
+plot(st_geometry(ruas_botafogo), 
+     col = "red",
+     lwd = 2,
+     add = T)
+```
+
+---
+
+#### Tarefa 5 - Calcular a distância de cada rua
+
+Com as ruas separadas e cortadas com os limites do bairro, o seguinte passo é calcular a distância da UPA para cada rua. Vamos aproveitar o cálculo para adicionar as distâncias no dataframe do objeto "ruas_botafogo" e finalmente fazer o cartograma com as distâncias.
+
+```{r spatial_08, message=FALSE}
+# calcular a distância da UPA para cada rua do bairro
+distancia <- st_distance(upa, ruas_botafogo)
+
+# adicionar distância como novo atributo 
+ruas_botafogo$dist <- distancia[1,]
+
+```
+
+---
+
+#### Tarefa 6 - Cartograma mostrando as distâncias no bairro a partir da UPA
+
+```{r spatial_08b}
+# plotar as ruas com a cor acorde distância e adicionar UPA
+
+plot(ruas_botafogo["dist"], 
+     main  = "Distância até a UPA Botafogo", 
+     reset = F)
+
+plot(st_geometry(upa), 
+     col  = "red", 
+     pch  = 17, 
+     size = 6,
+     add  = T)
+
+plot(st_geometry(botafogo), 
+     col    = NULL, 
+     border = "black", 
+     add    = T)
+```
+
+
+#### Desafio: achar a distância media das ruas até a UPA, qual a rua mais afastada?
+
+---
+
+FIM DO EXERCÍCIO `r format(Sys.Date())`
+
+---

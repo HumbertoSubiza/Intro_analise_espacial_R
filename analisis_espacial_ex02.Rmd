@@ -1,0 +1,232 @@
+---
+title: ""
+author: "WHSP"
+date: "5 de fevereiro de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+## Exercicio 02 de análise espacial
+
+#### Objetivo:
+
+Analisar o tipo e distribuição de nascimentos no município de RJ entre os anos 2010 e 2015
+
+  Insumos:
+  
+   - Arquivo partos_munic.csv extraído do [DATASUS](http://www2.datasus.gov.br/DATASUS) em novembro de 2017
+   
+   - Arquivo camada com os municípios do estado do Rio de Janeiro
+   
+Gráficos elaborados exclusivamente com o pacote `tmap`.
+
+---
+
+```{r libraries}
+library(tidyverse)
+library(sf)
+library(tmap)
+```
+
+
+Leitura dos arquivos do Datasus em novembro 2017:
+
+arquivo "partos_munic.csv", contem o código da regiao de saúde, o codigo e nome do municipio e as estatisticas do total de nascidos vivos entre 2010 e 2015 por tipo de nascimento (vaginal, cesario ou ignorado).
+
+
+```{r spatial_09}
+partos_munic <- read.csv("data/partos_munic.csv")
+
+names(partos_munic) <- c("REGIÃO.SAUDE","CD_GEOCODM","MUNICIPIO",
+                         "VAGINAL","CESARIO","IGNORADO")
+
+# colocar 0 na variavel "IGNORADO" quando tiver NA
+partos_munic$IGNORADO <- ifelse(partos_munic$VAGINAL > 0 &
+                                is.na(partos_munic$IGNORADO) == TRUE,
+                                0, partos_munic$IGNORADO)
+
+# Deixo apenas os municipios que tem registros válidos (90)
+partos_munic <- partos_munic[complete.cases(partos_munic),]
+```
+ 
+Criar variaveis PERC_VAG, PERC_CES e TOTAL_PED com percentagens de partos vaginais, 
+cesarianos e total de atendimento pediatrico de nascimentos
+ 
+```{r spatial_10}
+partos_munic <- mutate(partos_munic, 
+                       PERC_VAG  = round(VAGINAL / 
+                                           (VAGINAL + CESARIO + IGNORADO)*100, 1))
+partos_munic <- mutate(partos_munic, 
+                       PERC_CES  = round(CESARIO / 
+                                           (VAGINAL + CESARIO + IGNORADO)*100, 1))
+partos_munic <- mutate(partos_munic, 
+                       TOTAL_PED = (VAGINAL + CESARIO + IGNORADO))
+```
+
+---
+
+ Leitura do arquivo de camada com a geometria dos municipios, codificação windows 1252
+
+```{r spatial_11}
+rj <- st_read("data/RJ_municip.shp", options = "ENCODING=windows1252")
+
+# plotagem para conferencia
+plot(rj["ID"], col = "lightgray")
+
+```
+
+
+```{r spatial_12}
+# estrutura e resumo
+head(rj)
+```
+
+Combinacao do objeto sp com o dataframe partos_munic, chave = "CD_GEOCODM",
+ comum em ambos objetos
+
+```{r spatial_13}
+rj_merge <- merge(rj,
+                  partos_munic,
+                  by = "CD_GEOCODM")
+
+plot(rj_merge["ID"], col= "lightgray")
+```
+
+
+ Resumo do objeto `sf` poligono, atentar para o número de polígonos já que 
+ 
+```{r spatial_14}
+summary(rj_merge[, 6:12])
+```
+ 
+
+### Graficos com tmap
+ 
+#### 1- Distribuicao da percentagem de cesarianas por municipio
+
+
+```{r spatial_15}
+tm_shape(rj)                     + # mapa base
+  tm_fill(col = "red")           + # cor vermelha
+  
+tm_shape(rj_merge)               + # mapa distribuição
+  tm_fill(col    = "PERC_CES")   + # percentagem de cesarianas
+  tm_borders(col = "burlywood4") + # cor borda municipios
+  tm_credits("Dados extraidos do DATASUS em nov2017\nEm vermelho e sem dados: Guapimirim e Quatis", position= c("center", "bottom")) # creditos
+```
+
+---
+
+#### 2- Distribuicao da percentagem de parto vaginal por municipio
+
+```{r spatial_16}
+tm_shape(rj)                     + # mapa base
+  tm_fill(col = "red")           + # cor vermelha
+  
+tm_shape(rj_merge)               + # mapa distribuição
+  tm_fill(col    = "PERC_VAG")   + # percentagem de partos vaginais
+  tm_borders(col = "burlywood4") + # cor borda municipios
+  tm_credits("Dados extraidos do DATASUS em nov2017\nEm vermelho e sem dados: Guapimirim e Quatis", position= c("center", "bottom")) # creditos
+```
+
+---
+
+#### 3- Distribuicao da percentagem por quantiles de parto cesariano por municipio
+
+```{r spatial_17}
+tm_shape(rj)                      + # mapa base
+  tm_fill(col = "red")          + # cor vermelha
+  
+tm_shape(rj_merge)                                 + # mapa distribuição
+  tm_fill(col    = "PERC_CES", style = "quantile") + # percentagem de partos cesarianos
+  tm_borders(col = "burlywood4")                   + # cor borda municipios
+  tm_credits("Dados extraidos do DATASUS em nov2017\nEm vermelho e sem dados: Guapimirim e Quatis", position= c("center", "bottom")) # creditos
+```
+
+---
+
+#### 4-  Distribuicao da percentagem por quantiles de parto vaginal por municipio
+
+```{r spatial_18}
+tm_shape(rj)                   + # mapa base
+  tm_fill(col = "red")         + # cor vermelha
+  
+tm_shape(rj_merge)                              + # mapa distribuição
+  tm_fill(col = "PERC_VAG", style = "quantile") + # percentagem de partos vaginais
+  tm_borders(col = "burlywood4")                + # cor borda municipios
+  tm_credits("Dados extraidos do DATASUS em nov2017\nEm vermelho e sem dados: Guapimirim e Quatis",
+             position=c("center", "bottom")) # creditos
+```
+
+---
+
+####  Legendas com percentagens
+
+```{r spatial_19}
+etiq <- c("40-50", "50-60",   "60-70", "70-80", "80-90", "90-100")
+```
+
+Plotagem final
+ 
+```{r spatial_20}
+tm_shape(rj)                   + # mapa base
+  tm_fill(col = "red")         + # cor vermelha
+  
+tm_shape(rj_merge)                          + # # mapa distribuição
+   tm_fill(col     =  "PERC_CES" ,            # argumentos preenchimento
+           palette =  "YlGnBu" ,              # paleta divergente
+           auto.palette.mapping = TRUE ,
+           colorNA = NULL ,                   # nao plotar NAs
+           title   = "%"   )               +
+  tm_borders(col   = "burlywood4")         + # cor bordas dos municipios
+  tm_grid( projection = "longlat")         + # grid em long/lat
+  tm_legend(position  = c("left", "top"))  +
+  tm_credits("Partos por cesariana\nno RJ (percentagens) \nDestaque: Aperibé, Cambuci,\nItalva, Itacoacara,\nParacambi, S. A. de Padua, \nSão J. de Ubá, \nSão Sebastião do Alto", size = 1.0,
+             position= c("center", "top"))                    +
+  tm_credits("Dados extraidos do DATASUS em nov2017\nEm vermelho e sem dados: Guapimirim e Quatis",
+             position=c("center", "bottom")) # creditos
+```
+
+---
+
+```{r spatial_21}
+tm_shape(rj)                              + # mapa base
+  tm_fill(col = "red")                    + # cor vermelha
+  
+tm_shape(rj_merge)                        + # # mapa distribuição
+  tm_fill(col     =  "PERC_VAG",            # argumentos preenchimento
+          palette =  "YlGnBu",              # paleta divergente
+          auto.palette.mapping = TRUE,
+          colorNA = NULL,                   # nao plotar NAs
+          title   = "%" )                 + # legenda
+  tm_borders(col = "burlywood4")          + # bordas dos poligonos
+  tm_grid( projection = "longlat")        + # grid em long/lat
+  tm_legend(position = c("left", "top"))  +
+  tm_credits("Parto vaginal\n no RJ (percentagens) \nDestaque: Areal,
+Com. Levy Gasparian, \nTrês Rios",
+             position=c("center", "top"),   # titulo do mapa
+             size = 1.0)                  +
+  tm_credits("Dados extraidos do DATASUS em nov2017\nEm vermelho e sem dados: Guapimirim e Quatis",
+             position=c("center", "bottom")) # creditos
+
+```
+
+---
+
+Baseado nos cartogramas acima, que pode deduzir? onde se concentram cada tipo de nascimentos? Que mais pode inferir?
+
+---
+
+ Fim do exercicio
+ 
+ 20180820
+
+---- 
