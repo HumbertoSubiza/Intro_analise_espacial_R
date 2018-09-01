@@ -1,0 +1,645 @@
+---
+title: "Análise e visualização de dados espaciais com R - 4a. Parte"
+author: "Walter Humberto Subiza Piña"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+As seguintes bibliotecas do _R_ devem estar instaladas e carregadas para a correta execução dos códigos na oficina.
+
+```{r libraries}
+library(sf)
+library(raster)
+library(tidyverse)
+```
+
+### Indice
+
+
+#### 1. Análise espacial de dados vetoriais
+
+   a- _Buffer_ : função <span style="color:red"> `st_buffer(), st_union()`</span>
+
+   b- Áreas envolventes: funções <span style="color:red"> `st_bbox(), st_make_grid(), st_convex_hull()`</span>
+
+   c- Centroides: função <span style="color:red"> `st_centroid()`</span>.
+
+     Exercício
+
+   d- Área: função <span style="color:red">`st_area()`</span> (para dados tipo polígono ou multipolígonos)
+  
+  e- Distâncias: função <span style="color:red">`st_distance()`</span> (matriz de distâncias entre pontos)
+  
+  f- Comprimento de feições lineares: função <span style="color:red"> `st_lenght()`</span> (para dados tipo LINESTRING ou MULTILINESTRING)
+  
+  g - Adicionar dados num objeto `sf`: função <span style="color:red"> `merge()`, `left_join()` e `st_join()`</span>
+  
+  h- Simplificando poligonos: função <span style="color:red"> `st_simplify()`</span>
+ 
+---
+
+#### 2. Análisis espacial de dados matriciais
+
+   a- leitura de dado matricial em camada única (MDE)
+   
+   b- reclassificação: função<span style="color:red"> `reclassify()`</span>
+
+    Exercícios
+
+   b- Leitura de valores _raster_: função <span style="color:red">`getValues()`, `getValuesBlock()`, `extract`</span>
+   
+
+   c- Mudar a resolução: função <span style="color:red">`aggregate()`</span>
+
+     Exercício
+
+   d- Gravar um arquivo raster: <span style="color:red">`writeRaster()`</span>
+
+\
+---
+\
+
+### 1- Análise espacial em dados vetoriais
+
+Em análise de dados georreferenciados, se recomenda trabalhar com SGR de coordenadas projetadas e no caso de ter várias camadas de dados diferentes, compatibilizar todos para um mesmo _CRS_. Teóricamente é possível fazer análises com coordenadas geográficas, mas os resultados  deveriam ser transformados depois.
+
+Como já visto, a geometria dos dados é armazenada numa coluna da classe `sfc` do tipo “lista”. Algumas funções específicas do pacote `sf` permitem manipular e fazer cálculos com a geometria como:
+
+  - st_bbox, st_buffer, st_geometry, st_intersection, st_simplify, st_convex_hull, st_union, st_crs ... 
+  
+  
+Para uma listagem completa das funções que operam sobre a classe `sfc`, veja `methods(class="sfc")` e a ajuda de cada função. Na sequência alguns exemplos específicos.
+
+#### a. _Buffer_
+
+O cálculo de um _buffer_  entorno de uma área ou região tem muitas utilidades, como localizar feições num raio determinado de km ou a quantidade de hospitais ou escolas próximas a uma localidade. A função que calcula o _buffer_ é `st_buffer()`, sendo o primeiro argumento, os dados e o segundo argumento, a distância usada para o buffer. 
+
+Se o dado é pontual, cria um círculo de raio correspondente à distância, enquanto se é polígono, cria uma  área entorno de cada elemento. 
+
+
+```{r map35}
+# leitura de arquivo vetorial com 1 poligono e codificação UTF-8
+(nova_ig_pol <- st_read("data/nova_ig_mun_UTF.shp", options = "ENCODING=UTF-8"))
+
+# leitura de arquivo vetorial de pontos
+(nova_ig_pts <- st_read("data/nova_iguacu_pontos.shp"))
+```
+
+Os dois dados importados estão em coordenadas geográficas, pelo que será feita sua transformação para _CRS_ 31983 (SIRGAS UTM fuso 23S)
+
+```{r  map36}
+(nova_ig_pol_utm <- st_transform(nova_ig_pol, 31983))
+
+(nova_ig_pts_utm <- st_transform(nova_ig_pts, 31983))
+```
+
+Criamos um buffer entorno de cada ponto com 2000 m de raio.
+
+```{r  map37}
+# cria um buffer de 2 km entorno de cada ponto
+nova_ig_pts_buff <- st_buffer(nova_ig_pts_utm, 2000)
+
+# gráfico
+plot(nova_ig_pol_utm["ID"], 
+     col   = "lightblue", 
+     main  = "Pontos no municipio de Nova Iguaçu com buffer de 2 km ",
+     axes  = T,
+     reset = F)
+
+plot(nova_ig_pts_buff, 
+     add  = TRUE, 
+     pch  = 19, 
+     size = 2, 
+     col  = "green")
+
+plot(st_geometry(nova_ig_pts_utm), 
+     add = T, 
+     pch = 16)
+```
+
+
+Para juntar todos os buffers numa feição única, podemos disolver a geometria com a função `st_union()`. Serão juntadas todas as geometrias que tenham alguma superposição.
+
+```{r  map38}
+# disolvemos os limites de cada buffer pontual
+nova_ig_pts_buff_dis <- st_union(nova_ig_pts_buff)
+
+# plotamos o municipio e o novo buffer
+plot(nova_ig_pol_utm["ID"], 
+     col   = "lightblue", 
+     main  = "Municipio de Nova Iguaçu com Buffer disolvido",
+     axes  = T,
+     reset = F)
+
+plot(st_geometry(nova_ig_pts_buff_dis), 
+     add = T, 
+     col = "green")
+
+plot(st_geometry(nova_ig_pts_utm), 
+     add = T, 
+     pch = 16)
+```
+
+---
+
+#### b. Áreas envolventes
+
+No caso de dados vetoriais, é possível criar áreas envolventes alrededor de um objeto. O caso mais simples é encontrar os limites mínimos e máximos da área em que estão contidos determinados dados ou ainda calcular polígonos que permitem recortar diversas camadas de dados e analisá-las em conjunto.
+
+Para extrair os limites de uma área temos a função `st_bbox()`, que trae como resultado os valores xmin, ymin, xmax e ymax. 
+
+Para criar um poligono com esses limites, usamos a função `st_make_grid()`. No caso de criar apenas um retangulo (ou outra figura) envolvente, podemos usar a função adicionando o argumento `n = 1`.
+
+
+#### Exercício
+
+Criar um retángulo envolvente nos pontos levantados no município de Nova Iguaçu.
+
+```{r  map39}
+# extração dos limites da área
+st_bbox(nova_ig_pts_utm)
+
+#criar um retangulo com os valores minimos e máximos da área
+nova_ig_pol_env <- st_make_grid(nova_ig_pts_utm, n = 1)
+
+# plotamos o municipio e o novo buffer
+plot(nova_ig_pol_utm["ID"], 
+     col   = "lightblue", 
+     main  = "Municipio de Nova Iguaçu com retângulo envolvente",
+     axes  = T,
+     reset = F)
+
+# retângulo envolvente
+plot(nova_ig_pol_env, add=T)
+
+# pontos originais
+plot(st_geometry(nova_ig_pts_utm), 
+     add = T, 
+     pch = 16)
+```
+
+---
+
+Se o objetivo é criar um polígono de tamanho mínimo entorno dos dados, a função `sf::st_convex_hull()` efetua o cálculo. É importante salientar que nesse caso, primeiro devemos converter a feição multipolígono para polígono único, para depois aplicar a função. A função que junta os dados, como vimos é `st_union`.
+
+#### Exercício
+
+Seguindo o exemplo anterior do município de Nova Iguaçu, vamos criar um polígono mínimo que envolva os dados pontuais. Para isso devemos juntar numa única feição todos os pontos, depois calcular o polígono mínimo (cujos lados vão conter os pontos mais exteriores) e finalmente plotar todos os dados.
+
+```{r map40}
+# criamos um novo objeto com todos os pontos levantados
+ni_uniao <- st_union(nova_ig_pts_utm)
+
+# calculamos o polígono envolvente
+ni_uniao_hull <- st_convex_hull(ni_uniao)
+
+# plotamos o municipio e o buffer
+plot(nova_ig_pol_utm["ID"], 
+     col   = "lightblue",
+     main  = "Retângulo e poligono envolvente nos pontos",
+     axes  = T,
+     reset = F)
+
+# retângulo envolvente
+plot(nova_ig_pol_env, 
+     add = T)
+
+# polígono mínimo
+plot(ni_uniao_hull, 
+     add = T, 
+     col = "red")
+
+# pontos originais
+plot(st_geometry(nova_ig_pts_utm), 
+     add = T, 
+     pch = 16)
+```
+
+---
+
+
+#### c. Centroides
+
+Esse cálculo é simples e permite, por exemplo, colocar etiquetas nas feições. Ele faz sentido com dados vetoriais de tipo polígono. A função que realiza o cálculo dos centroides é `st_centroid()`, usando apenas um argumento: os próprios dados.
+
+#### Exercício
+
+Em exercícios anteriores, temos importado um arquivo multipolígno com os municípios do estado do Rio de Janeiro, sendo salvo com o nome "rj_mun". Vamos primeiro calcular o centroide de cada município, sendo que é recomendado para este cálculo, usar coordenadas projetadas e não geográficas. Debido a configuração geográfica de cada município, o centroide pode ficar deslocado.
+
+```{r map41}
+# leitura de arquivo  vetorial multipoligono, codificado UTF-8
+rj_mun <- st_read("data/RJ_municip.shp", options = "ENCODING=UTF-8" )
+
+#visualização
+plot(rj_mun["NM_MUNICIP"], axes=T,graticule=T)
+
+# reprojetar as coordenadas para UTM zona 23
+rj_mun_utm <- st_transform(rj_mun, crs=31983)
+#estrutura
+head(rj_mun_utm)
+
+#visualização
+plot(rj_mun_utm["NM_MUNICIP"], axes=T, graticule = T)
+```
+
+Com os dados transformados, vamos calcular os centroides e adicionarlos ao cartograma anterior.
+
+```{r map42}
+# calculo de centroides
+centroides_rj <- st_centroid(rj_mun_utm)
+
+#visualização
+plot(rj_mun_utm["NM_MUNICIP"],
+     col   = "lightblue",
+     axes  = T,
+     main  = "Centroides dos municipios - RJ",
+     reset = F)
+
+plot(st_geometry(centroides_rj), 
+     add = T,
+     pch = 19,
+     col = "red")
+```
+
+
+
+#### Exercício adicional
+
+Colocar novos limites nos eixos e graficar os nomes dos municípios
+
+---
+
+#### d- Área
+
+	- `st_area()` (para dados tipo polígono ou multipolígonos)
+
+O cálculo de áreas tem sentido apenas para feições de tipo polígono ou multipolígono. O resultado da função `st_area()`, é da classe unidades (neste caso $m^2$). Para obter apenas o resultado numérico usamos a função `units::drop_units()` ou `unclasss()`.
+
+Cálculo da área do município de Nova Iguaçú.
+
+```{r map43}
+# st_area(): area em m^2
+st_area(nova_ig_pol_utm)
+
+# eliminação das unidades
+units::drop_units(st_area(nova_ig_pol_utm))
+
+# area em km^2
+units::drop_units(st_area(nova_ig_pol_utm))/1000000
+```
+
+Acorde a última informação do IBGE (2017) a área oficial é de 520,807 $km^2$ [IBGE](https://www.ibge.gov.br/geociencias-novoportal/organizacao-do-territorio/estrutura-territorial/15761-areas-dos-municipios.html?=&t=o-que-e).
+
+---
+
+#### e- Distâncias
+
+	- `st_distance()` (matriz de distâncias entre pontos)
+
+A função `st_distance()` retorna uma matriz cheia com as distâcias entre os pontos do objeto. Usando o "nova_ig_pts_utm", vamos calcular as distância entre os pontos e mostrar a distância da Prefeitura de Nova Iguaçú (feição número 2) para cada um deles.
+
+```{r map44}
+# calcula da distância, usando a geometria do objeto e salvando como dataframe
+df <-  as.data.frame(st_distance(st_geometry(nova_ig_pts_utm)))
+
+# colocamos os nomes para identificação das distâncias
+row.names(df) <- colnames(df) <- nova_ig_pts_utm$Name
+
+#  mostrar distâncias a partir da Prefeitura (feição número 2)
+#  apenas em metros e decimetros
+round(df[2],1)
+```
+
+---
+
+#### f- Comprimento de feições lineares
+
+	- `st_lenght()` (para dados tipo LINESTRING ou MULTILINESTRING)
+
+```{r map45}
+#leitura de arquivo de pontos, apenas as colunas da geometria (1 e 2)
+# e salvamos como matriz
+nova_ig_line <- as.matrix(read.csv("data/nova_ig_pts_utm.csv")[, 1:2])
+
+# tranformação em linestring
+nova_ig_linestring <- st_linestring(nova_ig_line)
+
+# cálculo do comprimento da linea, em km
+round(st_length(nova_ig_linestring)/1000, 2)
+
+# gráfico da linha
+# 
+plot(nova_ig_pol_utm["ID"], reset = F, col = "lightblue", axes = T)
+plot(nova_ig_linestring, add = T, type = "p", pch = 19)
+plot(nova_ig_linestring, add = T, lwd=1.5)
+```
+
+---
+
+A manipulação dos dados dos dataframe `sf` preserva a geometria nas saídas produzidas.Por exemplo, se extraímos atributos do dataframe, o resultado terá a geometria original. Para remover a geometria dos resultados devemos usar `sf::st_set_geometry(“dados”, NULL)`. 
+
+Exemplo:
+
+`novos_dados <- sf::st_set_geometry(dados.shp, NULL)`
+
+---
+
+#### g- Adicionar dados num objeto `sf`
+
+Dois casos podem se apresentar: adicionar feições baseado em atributos e adicionar feições baseados na geometria.
+
+No primeiro caso temos um objeto `sf` e se adicionam atributos novos. A geometria é ignorada e as funções que realizam a união são `merge()` ou `left_join()`. 
+
+Caso a geometria entre ambos objetos não coincida, e seja usado o  `merge()`, o novo objeto vai incluir apenas os casos completos, ou seja aquelas feições coincidentes em ambos dataframe. Os argumentos `all.x` e `all.y` permitem que sejam incluídas todas as linhas ou colunas não coincidentes, mas as novas feições incluídas com `all.y` no primeiro objeto, carecem de geometria e não tem representação espacial.
+
+Quando é usado o `left_join()`, o novo objeto inclui todos os elementos do objeto inicial `sf`, completando o dataframe com os novos atributos do segundo dataframe e deixando como _NA_ àqueles registros que nâo coincidam. Veja nos exemplos a seguir em que um objeto `sf é juntado com um dataframe menor e posteriormente com um de maior tamanho.
+
+```{r map46}
+# leitura de arquivo de dados
+df1 <- read.csv("data/df_1.csv")
+
+# transformação do primeiro em objeto sf
+df1_sf <- st_as_sf(df1, coords = c("Long", "Lat"), crs= 4674, dim = "XY")
+
+# novos dados
+df2 <- read.csv2("data/df_2.csv")
+
+df3 <- read.csv2("data/df_3.csv")
+
+# visualizar os dados
+head(df1_sf, 2)
+class(df1_sf)
+
+head(df2, 2)
+class(df2)
+
+tail(df3, 2)
+class(df3)
+```
+
+```{r map47}
+# usando merge com argumentos padrão, retem apenas as feições completas
+# primeiro objeto com 10 feições, segundo com 8
+df_m <- merge(df1_sf, df2)
+# resultado objeto com 8 feições (comuns a ambos)
+df_m
+
+# usando merge com argumentos padrão, retem apenas as feições completas
+# primeiro objeto com 10 feições, segundo com 17
+df_m2 <- merge(df1_sf, df3)
+# resultado objeto com 7 feições (comuns a ambos)
+df_m2
+
+# usando left_join, retem as feições do primeiro objeto e adiciona as do 
+# segundo, colocando NA onde não existam valores
+# primeiro objeto com 10 feições, segundo com 8
+df_l <-left_join(df1_sf, df2) 
+# resultado objeto com 10 feições que pertencem ao primeiro objeto
+df_l
+
+# usando left_join, retem as feições do primeiro objeto e adiciona as do 
+# segundo, colocando NA onde não existam valores
+# primeiro objeto com 10 feições, segundo com 17
+df_l2 <-left_join(df1_sf, df3) 
+# resultado objeto com 10 feições que pertencem ao primeiro objeto
+df_l2
+
+```
+
+Como exercício faça um `merge` com argumentos de `all.x` e `all.y`. Analise resultados e faça um gráfico da variável "DeltaP". Quantas feições tem o gráfico? Verifique com um `summary()`.
+
+Para adicionar dois objetos `sf` baseado em interseção espacial, usa-se `st_join()`, veja a ajuda da função para escolher o melhor método de união. Este método é um `left_join()` que preserva todos os registros do primer atributo e a geometria do primeiro objeto.
+
+---
+
+#### h- Simplificando poligonos
+
+No caso de ter poligonos muito densificados, podemos simplificá-los usando a função `sf::st_simplify`, se desejamos preservar a topologia o argumento é `preserveTopology = TRUE` e a simplificação é realizada com o argumento `dTolerance = xx`, sendo `xx` a distãncia nas mesmas unidades do objeto, neste caso, em metros. A função `object_size()` mede o tamanho do arquivo antes e depois da simplificação.
+
+```{r map48, fig.height=4, fig.width=4}
+# tamanho do objeto antes da simplicação
+cat("Tamanho inicial= ", object.size(nova_ig_pol_utm), "bytes")
+
+#simplificação
+ig_simples <- st_simplify(nova_ig_pol_utm, 
+                          dTolerance       = 400,
+                          preserveTopology = TRUE)
+
+# tamanho do objeto depois da simplicação                          
+cat("Tamanho final  = ", object.size(ig_simples), "bytes")
+
+plot(nova_ig_pol_utm["ID"])
+plot(ig_simples["ID"])
+```
+
+
+\
+---
+\
+
+---
+
+#### 2. Análise espacial em dados matriciais
+
+O pacote `raster` possui diversas funções para a leitura, manipulação e gravação de dados matriciais, algumas delas são (ver documentação do pacote):
+
+Algebra _raster_: podemos usar os operadores lógicos e as funções algebraicas.
+
+Funções para modificar um _raster_: crop, trim, extend, merge, dis(aggregate), ressample, shift, projecRaster, flip, rotate
+
+Sobreposição: overlay, mask, cover.
+
+reclassify, permite uma reclassificação dos valores, pode ser usado para criar máscaras, 
+distance, spatial configuration (clump, boundaries, area), 
+
+prediction: predict()
+
+Conversão vetor para _raster_: rasterize()
+
+raster para vetor: contour, RasterToPoints, RasterToPolygons, rasterToContour
+
+funções de resumo: freq, zonal, crostab
+
+Nos seguintes exemplos vamos usar algumas das funções mencionadas.
+
+---
+
+#### a- Leitura de dado matricial em camada única (MDE)
+
+```{r map49}
+(nova_iguacu_MDE_27444ne <- raster("data/MDE_27444ne_v1.tif"))
+```
+
+---
+
+#### b- reclassificação
+
+No caso de ter de mudar valores de pixels ou obter um novo raster re-classificado podemos usar `reclassify()`. Esta função é muito útil quando queremos limpar o objeto de valores indesejados ou que representem ausência de valores, como -9999 ou -32768. A função `reclassify()` usa o argumento `rcl` como entrada para efetuar a reclassificação. O argumento pode tomar duas formas diferente de entrada:
+
+- uma vetor de duas colunas em que se especifique : valor antigo, valor novo
+	exemplo: `c(9999, NA)` muda os valores com 9999 para valor NA
+
+- um vetor ou matriz de três colunas em que se especifique: valor menor, valor maior, valor novo
+	exemplo: `rbind(c(200, 500, NA), c(600, 1000, 0))` muda os valores entre 200 e 500 para valor _NA_ (pode criar uma máscara de valores) e os valores entre 600 e 1000 serão 0 acorde a segunda linha da matriz.
+
+#### Exercício
+
+1- Plotar e verificar os valores máximo e mínimo do objeto `nova_iguacu_MDE_27444ne`. 
+
+```{r map50}
+plot(nova_iguacu_MDE_27444ne)
+nova_iguacu_MDE_27444ne
+```
+
+---
+
+2- Reclassificar o MDE de Nova Iguaçú para retirar os valores negativos indesejados (-32768 até 0). Neste caso podemos definir o argumento `rcl` ou diretamente colocar os valores a substituir como segundo argumento.
+
+```{r map51}
+# reclassificar e salvar num novo objeto chamado nova_iguacu_class
+nova_iguacu_class <- (reclassify(nova_iguacu_MDE_27444ne, c(-32768, 0, 0)))
+
+#Verificar a classificação
+nova_iguacu_class
+
+# gráfico
+plot(nova_iguacu_class)
+
+```
+
+---
+
+3- Usando a função `contour`, adicionar as curvas de nível ao MDE. Neste caso não vamos salvar as curvas obtidas, apenas serão adicionadas ao MDE
+
+```{r map52, fig.height=6, fig.width=6}
+plot(nova_iguacu_class, main = "MDE Nova Iguaçú com curvas de nível")
+contour(nova_iguacu_class, add = T)
+```
+
+Para salvar as curvas de nível veja a função `rasterToContour()`, a quantidade de curvas ou o seu espaçamento pode ser estabelecido com argumentos específicos.
+
+---
+
+#### c- Leitura de valores raster com a função `getValues`
+
+Se desejamos ler os valores de um objeto _raster_ podemos usar a função `getValues`.  da seguinte forma:
+
+Todos os valores:
+
+```{r map53}
+# salvar todos os valores
+valores <- getValues(nova_iguacu_class)
+
+# resumo dos valores do arquivo
+summary(valores)
+```
+
+`getValuesBlock` nos permite obter os valores em um determinado intervalo de células, especificando as linhas/colunas. Se desejamos extrair valores num intervalo de coordenadas, se usa a função `extent` para definir os limites da área e depois a função `extract` para obter os valores.
+
+```{r map54}
+# Uso de getValuesBlock 
+# Linhas 500 a 503 e colunas 600 a 603 em formato vetor,
+# para obter uma matriz, use format='matrix' como argumento adicional
+bloco <- getValuesBlock(nova_iguacu_class, 500, 4, 600, 4)
+bloco
+summary(bloco)
+
+# Extração por coordenadas, com função  extent e extract
+ext <- extent(652000, 653500, 7477000, 7478000)
+altitudes_retang <- raster::extract(nova_iguacu_class, ext)
+summary(altitudes_retang)
+
+# identificação da area extraida
+plot(nova_iguacu_class)
+plot(ext, 
+     add = T, 
+     col = "red", 
+     lwd = 2)
+```
+
+---
+
+#### c- Mudar a resolução
+
+A função `aggregate()` permite diminuír a resolução ou `disaggregate()` para aumentá-la. Em ambos casos devemos especificar que função vai agregar ou interpolar os dados. 
+
+No caso de `aggregate`, a função une diversas células ou _pixels_, usando dois parâmetros: um referente a função que será usada e um outro para determinar a quantidade de células a usar. 
+
+Duas funções auxiliares importantes são `res()` para saber a dimensão do raster (linhas x colunas) e `ncell()` para saber o número total de pixels. Consulte a ajuda de `aggregate()` para ver os valores padrão dos argumentos. Exemplo, agregando dados de um raster, usando a média de 10 células:
+
+`dados_menor <- aggregate(dados, fact = 10, mean)`
+
+---
+
+#### Exercício
+
+Vamos reduzir o MDE que foi reclassificado no exercício anterior usando um fator de 10 e a média das células. Posteriormente vamos conferir a quantidade de células do objeto original e o novo reduzido.
+
+```{r map55}
+# redução de tamanho
+nova_iguacu_class_menor <-   aggregate(nova_iguacu_class, fact = 10, mean)
+```
+
+
+```{r map56}
+# verificação do tamanho original
+ncell(nova_iguacu_class)
+res(nova_iguacu_class)
+
+# verificação do tamanho reduzido
+ncell(nova_iguacu_class_menor)
+res(nova_iguacu_class_menor)
+
+# visualização do novo objeto
+plot(nova_iguacu_class_menor)
+
+```
+
+---
+
+#### d- Gravar um arquivo raster
+
+Por último a gravação de um objeto raster é feita com a função `writeRaster()`, escolhendo o tipo de formato (veja os formatos que tem suporte com `writeFormats()`). 
+
+O pacote `raster`tem um formato nativo próprio que grava e lê em forma eficiente e que consiste em dois arquivos, um tipo texto com extensão ".grd" que contém as informações gerais dos datos, e um binário de extensão ".gri" com os valores do arquivo (consultar a documentação).
+
+```{r map57}
+# gravação do raster como arquivo tipo tif
+writeRaster(nova_iguacu_class, 
+            "data/mde_nova_ig_class.tif",
+            overwrite = T)
+
+#gravação do raster com formato nativo
+writeRaster(nova_iguacu_class, 
+            "data/mde_nova_ig_class_nativo",
+            overwrite = T)
+```
+
+---
+
+FIM da quarta parte
+
+---
+
+CREDITOS: 
+
+  +  Edzer Pebesma (2018). sf: Simple Features for R. R package version 0.6-3.
+  https://CRAN.R-project.org/package=sf
+
+  +  Robert J. Hijmans (2017). raster: Geographic Data Analysis and Modeling. R package version
+  2.6-7. https://CRAN.R-project.org/package=raster
+
+  +   Hadley Wickham (2017). tidyverse: Easily Install and Load the 'Tidyverse'. R package version
+  1.2.1. https://CRAN.R-project.org/package=tidyverse
+
+  + Fonte dos dados: o próprio autor do tutorial ou extraídos do portal IBGE: <https://www.ibge.gov.br/>
+  
