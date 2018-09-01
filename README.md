@@ -15,6 +15,8 @@ Em 25 de agosto de 2018, ficam disponiveis as duas primeiras partes de um total 
 
 Em 28 de agosto de 2018 ficou disponível a terceira parte de um total de 4 (mapas_com_R_03),
 
+Em 01 de setembro ficou disponível a quarta parte de um total de 4 (mapas_com_R_04), junto com os dois primeiros exercicios de fixação. Dados para reprodução, atualizados no Dropbox.
+
 Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
 
 ---
