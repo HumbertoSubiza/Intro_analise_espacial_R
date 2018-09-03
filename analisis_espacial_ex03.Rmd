@@ -1,0 +1,228 @@
+---
+title: ''
+author: "Walter Humberto Subiza Pina"
+date: "May 5, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+## Exercicio 03 de análise espacial
+
+### Objetivo:
+
+#### Calcular a densidade populacional em 2015 para cada município do Brasil.
+
+ Insumos:
+ 
+   - Arquivo camada "brasil_municipios.shp" com UF, região e municípios do Brasil
+   
+   - Arquivo "estimativa_dou_2018.csv", populacão estimada por municipio para 2018 (IBGE)
+   
+
+---
+
+Discussão: para calcular a densidade populacional precisamos de duas variáveis, a área por município e a população de cada um deles. O arquivo camada contém a geometria necessária para o cálculo da área de cada município, enquanto o arquivo texto contém a população estimada. O segundo arquivo não contém geometria pelo que será necessário incorporar a variável de população no dataframe do arquivo camada usando uma variável comúm, neste caso, o geocódigo do município. Como o cálculo será para todos os municípios do Brasil, usaremos o sistema de coordenadas geográficas. Para áreas menores recomenda-se transformar os dados para um sistema projetado, que fornece resultados mais precisos já que trabalha diretamente em unidades métricas.
+
+\
+---
+\
+
+#### Tarefa 1- Carregar o arquivo de camadas com as UFs, regiões e municipios
+
+##### carrega bibliotecas
+
+```{r libraries}
+library(sf)
+library(tidyverse)
+```
+
+
+```{r spatial_22}
+#carrega municípios do Brasil
+brasil_mun <- st_read("data/brasil_municipios.shp" , options = "ENCODING=windows-1252")
+brasil_mun
+```
+
+O arquivo importado tem 5572 municípios, incluindo o Distrito Federal onde cada um deles tem como 5 atributos  como ID, região, UF e o geocódigo. 
+
+Note-se que o SGR nao está definido e é sempre uma boa prática defini-lo, visando futuros cálculos ou transformações. Como as coordenadas são geográficas com elipsoide GRS80, definimos o SGR como SIRGAS2000, cujo código EPSG é 4674.
+
+```{r spatial_23}
+# defino o CRS
+st_crs(brasil_mun) <- 4674
+brasil_mun
+```
+
+\
+---
+\
+
+#### Tarefa 2- Cálculo da área municipal en $km^2$.
+
+O objetivo do exercício indica calcular a densidade populacional. Uma das componentes necessárias no cálculo é a área municipal em `km^2`, calculada com a funcão `sf::st_area` e cujo resultado está em unidades do SGR, neste caso metros quadrados. Esta funcão `st_area` chama um pacote denominado`lwgeod`.
+
+Como o resultado contém as unidades, estas devem ser removidas para ficar apenas com o valor numérico. Para melhor comprensão, o procedimento será feito passo a passo.
+
+
+```{r spatial_24}
+# cálculo da área de cada município em km2, arredondado a 3 casas decimais
+area <- round(st_area(brasil_mun)/1000000,3)
+head(area)
+
+# eliminamos as unidades
+AREA_KM2 <- units::drop_units(area)
+head(AREA_KM2)
+```
+
+\
+---
+\
+
+#### Tarefa 3- Incorporar a área calculada no dataframe dos municípios.
+
+A vantagem do pacote `sf` de tratar os atributos como dataframe nos permite usar a função base `cbind` para incluir o vetor de áreas calculadas. 
+
+```{r spatial_25}
+#adiciona o vetor das areas no objeto sf
+brasil_mun <- cbind(brasil_mun,AREA_KM2)
+```
+
+#####  Exercicios complementares 
+
+Aproveitando o dataframe, podemos fazer pesquisas nos dados como separar os estados da região Sul e calcular a área total, ou separar um municipio determinado.
+
+```{r spatial_26}
+sul <- filter(brasil_mun, REGIAO == "SUL")
+sum(sul$AREA_KM2)
+
+plot(sul["REGIAO"],
+     axes = T,
+     graticule = T,
+     col  = "lightblue", 
+     main = "Regiao Sul")
+
+poa <- filter(brasil_mun, REGIAO == "SUL" & NOME_MUN == "TORRES")
+plot(poa["UF"],
+     axes = T,
+     main = paste0("Área Município de Torres = ", poa$AREA_KM2, " km2"),
+     col  = "lightblue")
+
+```
+
+\
+---
+\
+
+#### Tarefa 4- Importar o arquivo com população estimada e incorporar no arquivo de municípios
+
+Importamos o arquivo com a populacão estimada pelo IBGE em julho de 2018 para cada município. O arquivo é do tipo texto e não tem geometria, pelo que será usado um atributo común a ambos para juntá-lo com nosso arquivo `brasil_mun`. 
+
+Esse atributo e o GEOCODIGO, identificador único que está composto de 7 números ou carateres, sendo os dois primeiros a UF e o resto do município.
+
+```{r spatial_27}
+pop_mun_2018 <- read_csv2("data/estimativa_dou_2018.csv", trim_ws = TRUE)
+
+head(pop_mun_2018)
+```
+
+Os atributos de interesse são apenas dois, o geocódigo, para fazer a juncão dos dataframes e a populacão estimada (POP_EST). Separamos esses dois atributos e juntamos com o arquivo principal georreferenciado.
+
+```{r spatial_28}
+# Selecionando as variáveis de interesse
+var <- c("GEOCODIGO", "POP_EST")
+pop_mun <- select(pop_mun_2018, !!var)
+
+# compatibilizando as variáveis que tem de ser de igual classe
+pop_mun$GEOCODIGO <- as.factor(pop_mun$GEOCODIGO)
+
+# juntando os dados populacionais ao dataframe municípios
+brasil_mun_pop <- left_join(brasil_mun, pop_mun, by = c("GEOCOD_MUN" = "GEOCODIGO"))
+```
+
+
+
+```{r spatial_29}
+# cálculo densidade
+brasil_mun_pop<- brasil_mun_pop %>% 
+  mutate(DENS_POP = round(POP_EST / AREA_KM2, 2))
+```
+
+A partir daqui podemos separar municípios por região e ou UF.
+
+```{r spatial_30}
+#min(brasil_mun_pop$DENS_POP)
+menor_dens <- filter(brasil_mun_pop,
+                     DENS_POP  == min(brasil_mun_pop$DENS_POP, na.rm = T))
+menor_dens
+
+plot(brasil_mun_pop["UF"], 
+     col       = "white",
+     axes      = T,
+     graticule = T,
+     main      = paste0("Menor densidade populacional ", 
+                        menor_dens$NOME_MUN, 
+                        " , ",
+                        menor_dens$UF, 
+                        " = ", 
+                        menor_dens$DENS_POP),
+     reset     = F)
+
+plot(menor_dens["UF"], col = "red", add = T)
+
+# maior densidade
+maior_dens <- filter(brasil_mun_pop,
+                     DENS_POP  == max(brasil_mun_pop$DENS_POP, na.rm = T))
+maior_dens
+
+sp <- filter(brasil_mun_pop, UF == "SÃO PAULO")
+
+plot(sp["UF"],
+     col = "white",
+     axes = T,
+     graticule = T,
+     main = paste0("Maior densidade populacional ", 
+                   maior_dens$NOME_MUN, 
+                   " , ", 
+                   maior_dens$UF, 
+                   " = ", 
+                   maior_dens$DENS_POP),
+     reset = F )
+
+plot(maior_dens["UF"], add = T,
+     col = "red")
+
+```
+ 
+---
+
+No começo falamos que era recomendável efetuar cálculos métricos usando um projeção plana para as coordenadas. Vemos no seguinte fragmento a diferença entre o cálculo da área usando um SGR geográfico e um projetado. O município de menor densidade é Japurá, AM, transformamos as coordenadas para sistema UTM fuso 19 (crs = 31979) e comparamos com as já calculadas em SIRGAS2000 (crs = 4674)
+
+```{r 30a}
+# transformo as coordenadas
+menor_dens_utm <- st_transform(menor_dens, crs = 31979)
+# calculo a área
+(area_utm <- units::drop_units(st_area(menor_dens_utm)/1000000))
+
+# área em SIRGAS2000
+menor_dens_utm$AREA_KM2
+
+# diferença
+menor_dens_utm$AREA_KM2 - area_utm
+
+```
+
+
+
+ Fim do exercicio
+ 
+ 20180820
+
+---- 
