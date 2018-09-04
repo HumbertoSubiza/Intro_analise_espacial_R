@@ -1,0 +1,294 @@
+---
+title: ''
+author: "Walter Humberto Subiza Pina"
+date: "May 5, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE,
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+## Exercicio 05 de análise espacial
+
+
+```{r libraries}
+library(sf)
+library(tidyverse)
+```
+
+
+### Objetivo:
+
+#### Determinar as ruas do municipio de Rio de Janeiro que cruzam com rodovias estaduais ou federais  (localização e número), em um entorno de 200 m das mesmas. A análise final será feita em SGR SIRGAS2000, coordenadas UTM fuso 23 (EPSG = 31983)
+
+
+ Insumos:
+ 
+   - Rodovias do Brasil levantadas pelo DNIT (rodovias_dnit.shp) - [DNIT](http://www.dnit.gov.br/mapas-multimodais/shapefiles)
+   
+   - logradouros municipio RJ (eixo_logra.shp) - [Prefeitura de Rio de Janeiro](http://pgeo3.rio.rj.gov.br/arcgis/rest/services/Cartografia/Vias/MapServer/0)
+
+   - malha municipal do Brasil (malha_municipal_brasil.shp) - [IBGE- Estrutura Territorial](https://www.ibge.gov.br/geociencias-novoportal/organizacao-do-territorio/estrutura-territorial/)
+   
+  - Unidades da federação (Brasil_UF_2013.shp) - [IBGE- Estrutura Territorial](https://www.ibge.gov.br/geociencias-novoportal/organizacao-do-territorio/estrutura-territorial/)
+
+---
+
+#### Tarefa 1- Carregar arquivo de camadas com as UFs, selecionar e separar o estado do RJ
+
+```{r spatial_36}
+brasil <- st_read("data/Brasil_UF.shp", options = "ENCODING=windows-1252")
+head(brasil)
+```
+
+Verificamos que o objeto importado tem 27 feições multipolígono e entre os atributos notamos dois que podem ser usados para selecionar o estado do Rio de Janeiro: o geocódigo (variável CD_GEOCODU)  e o nome do estado (variável NM_ESTADO). O objeto está em coordenadas geográficas e sem identificação do SGR. 
+
+##### EXTRA: plotar o objeto, escolher variável e cor. Titulo.
+
+Perguntamos se temos um registro de estado como o nome "RIO DE JANEIRO".
+
+```{r spatial_37}
+which(brasil$NM_ESTADO == "RIO DE JANEIRO")
+```
+
+O registro número 19 pertence ao estado procurado, vejamos agora o registro completo.
+
+```{r spatial_38}
+brasil[19,]
+```
+
+--
+
+A separacao do estado do RJ do resto do objeto "brasil", pode ser feita por qualquer dos atributos, se possível, sempre use um atributo numérico já que oferece menos probabilidade de erro que os de tipo texto. Neste caso e como encontramos rapidamente o nome, vamos usá-lo. Primeiro vamos definir o SGR como SIRGAS2000 (EPSG = 4764). Logo apos, vamos filtrar os dados selecionando o registro que corresponde a nossa procura e finalmente transformamos para CRS SIRGAS UTM.
+
+```{r spatial_39}
+# determino o CRS
+st_crs(brasil) <- 4674
+#brasil
+
+# separo o estado
+uf_rj_geo <- brasil %>% filter(NM_ESTADO == "RIO DE JANEIRO")
+
+# transformo para SIRGAS UTM, fuso 23S
+uf_rj_utm <- st_transform(uf_rj_geo, crs = 31983)
+```
+
+##### EXTRA: plotar objeto.
+
+---
+
+#### Tarefa 2 - Carregar arquivo de camadas com as rodovias, selecionar e separar as estradas no estado do RJ
+
+Importamos as rodovias do Brasil, levantadas pelo DNIT usando GPS. O arquivo já teve uma limpeza de atributos para torná-lo mais leve, de 29 atributos deixamos apenas 8 de interesse.
+
+```{r spatial_40}
+# leio rodovias
+rodovias <- st_read("data/rodovias.shp", options = "ENCODING=UTF-8")
+head(rodovias)
+```
+
+O objeto importado é do tipo multilinea, em coordenadas geográficas sem SGR, com um total de feições de 18428 e 8 colunas de atributos cada. Determino o _CRS_ como SIRGAS.
+
+---
+
+```{r spatial_41}
+st_crs(rodovias) <- 4674
+```
+
+```{r spatial_42}
+# Seleciono rodovias RJ e transformo para coordenadas planas UTM
+rodovias_rj <- rodovias %>% filter(UF == "RJ")
+rodovias_rj <- st_transform(rodovias_rj, crs = 31983)
+
+# plotar o estado do RJ com as rodovias, observe a opção graticule que calcula uma
+# grade geográfica e a opção axes que plota os eixos.
+plot(st_geometry(uf_rj_utm), graticule = T, axes = T)
+plot(st_geometry(rodovias_rj), add = T, col = "red")
+
+```
+
+
+#### Tarefa 3 - Carregar arquivo de camadas com as ruas do município de RJ, limpar atributos e transformar para CRS 31983.
+
+```{r spatial_43}
+# Leio ruas do municipio de RJ
+ruas <- st_read("data/eixo_logra.shp", options = "ENCODING=UTF-8")
+head(ruas)
+
+# Selecionar as colunas que interessam: 3,5
+ruas_rj <- ruas %>% select(3, 5)
+ruas_rj <- st_transform(ruas_rj, crs = 31983)
+plot(st_geometry(ruas_rj), axes = T)
+```
+
+---
+
+Verificamos que o objeto importado tem incluído as rodovias, para esta análise precisamos retirar todos os trechos que se referem a elas ou seus acessos. Para identificar os registros que se referem às rodovias, usaremos uma função do pacote `tidyverse::stringr`, denominada `str_detect`. 
+
+O resultado de aplicar esta função é um vetor lógico, que indica se o registro tem ou não as especificações desejadas e esse resultado lógico será usado para filtrar o dado original. 
+
+Note o uso do "!" para indicar ou uso inverso da função, ou seja incluir as feições não selecionadas pela função.
+
+```{r spatial_44}
+ruas_rj <- ruas_rj[!str_detect(ruas_rj$NM_TXTMEMO, "RODOVIA"),]
+ruas_rj
+```
+
+---
+
+#### Tarefa 4 - Carregar arquivo de camadas com os municípios do Brasil, identificar e separar o estado do RJ.
+
+O objeto "brasil" que contém os estados da federação não contém os municípios do estado do Rio de Janeiro, vamos importar um novo arquivo com a malha municipal do Brasil e posteriormente separar os municípios do estado do Rio de Janeiro e finalmente o município do Rio de Janeiro. O procedimento descrito tem apenas finalidade pedagógica, no final será mostrado como abreviar esta procura.
+
+```{r spatial_45}
+brasil_mun<- st_read("data/brasil_municipios.shp", options = "ENCODING=windows-1252" )
+brasil_mun
+```
+
+Identifico o estado de Rio de Janeiro e separo municípios.
+
+```{r spatial_46}
+rj_mun <- brasil_mun[which(brasil_mun$UF == "RIO DE JANEIRO"),]
+rj_mun <- st_transform(rj_mun, crs = 31983)
+rj_mun
+```
+
+Separo o município de Rio de Janeiro do resto dos municípios estaduais.
+
+```{r spatial_47}
+# Separo municipio de RJ
+mun_rj <- rj_mun[which(rj_mun$NOME_MUN == "RIO DE JANEIRO"),]
+
+# plotar o município e as rodovias
+plot(st_geometry(mun_rj), col="grey", graticule=T, axes=T, reset = F)
+plot(st_geometry(rodovias_rj), add = T, col = "Red", lwd=3)
+```
+
+Como mencionado no começo desta tarefa, se apresenta uma outra forma de abreviar o trabalho.
+A pesquisa usa a função `filter` para separar dos municípios do Brasil, os que pertencem ao estado do Rio de Janeiro e na sequência o município propriamente dito.
+
+
+```{r spatial_48}
+riomunic <- brasil_mun %>% filter(UF == "RIO DE JANEIRO" & NOME_MUN == "RIO DE JANEIRO")
+plot(st_geometry(riomunic))
+```
+
+---
+
+#### Tarefa 5 - Cortar as rodovias nos limites do município de Rio de Janeiro, criar um buffer para fazer a análise.
+
+As rodovias no estado podem ser novamente cortadas para abarcar apenas o município de RJ. A função que realiza o corte ou _clipping_ é `st_intersection`, e seus argumentos são: o objeto a ser cortado e o objeto de corte.
+
+```{r spatial_49}
+# Clip rodovias_rj com limites municipio, mun_rj
+rodovias_mun_rj <- st_intersection(rodovias_rj, mun_rj)
+head(rodovias_mun_rj)
+
+# Verificação
+plot(st_geometry(mun_rj), 
+     col       = "grey", 
+     graticule = T, 
+     reset     = F)
+plot(st_geometry(rodovias_mun_rj), 
+     add = T, 
+     col = "Red", 
+     lwd = 3)
+```
+
+Criamos um buffer de 200 m entorno das rodovias. Como o objeto criado tem diversas linhas cada uma correspondendo a um trecho da rodovia, as diversas feições do objeto são unidas numa única feição, usando a função `st_union`.
+
+```{r spatial_50}
+# criar buffer nas rodovias
+rodovias_mun_rj_buff <- st_buffer(rodovias_mun_rj, 200)
+
+# junta feicoes numa só
+rodovias_mun_rj_buff <- st_union(rodovias_mun_rj_buff)
+
+# verificacao
+plot(st_geometry(mun_rj), 
+     col       = "grey", 
+     graticule = T, 
+     reset     = F)
+plot(st_geometry(rodovias_mun_rj_buff), 
+     add = T, 
+     col = "Red")
+```
+
+---
+
+#### Tarefa 6 - Determinar as ruas que cortam o buffer de rodovias no município de RJ.
+
+Estamos em condições de definir as ruas que cortam as rodovias no município, para isso usamos a função `st_intersects`.
+
+```{r spatial_51}
+# calculo das ruas que cortam as estradas, reesultado é lista, retira os números
+# com [[1]]
+intersecao <- st_intersects(rodovias_mun_rj_buff,ruas_rj)[[1]]
+
+# criamos um novo objeto com as ruas de intersecção
+ruas_corte <- ruas_rj[intersecao,]
+ruas_corte
+
+# verificar
+plot(st_geometry(mun_rj), col="grey", graticule=T, axes=T, reset = F)
+plot(st_geometry(ruas_corte), col = "red", add=T, lwd=1.5)
+```
+
+O resumo indica que um total de 4325 trechos de ruas e avenidas cortam as rodovias no município. Qual a quantidade de ruas e avenidas? Neste caso vamos usar um pacote muito útil para tratar fatores (como os nomes das ruas), o `forcats`, que está incluído na biblioteca `tidyverse` mas ele deve ser carregado explicitamente, já que não integra o núcleo da biblioteca.
+
+```{r spatial_52}
+library(forcats)
+unique(ruas_corte$NM_TXTMEMO) %>%  fct_drop %>% fct_count() %>% summarise(n = n())
+```
+
+O total de avenidas e ruas que cortam as rodovias é de 957.
+
+---
+
+#### Tarefa 7 - Outras análises que podem ser feitas.
+
+  - a. Quais as rodovias que cortam o município e quantos trechos tem cada uma?
+
+```{r spatial_53}
+as.factor(rodovias_mun_rj$CODIGO) %>% fct_drop() %>% summary(("CODIGO"))
+```
+
+
+```{r spatial_54}
+BR_040 <- filter(rodovias_mun_rj, CODIGO == "BR-040")
+print(paste0("Extensão BR-040 = ",round(sum(BR_040$EXT_TRECHO),2)))
+
+BR_101 <- filter(rodovias_mun_rj, CODIGO == "BR-101")
+print(paste0("Extensão BR-101 = ",round(sum(BR_101$EXT_TRECHO),2)))
+
+BR_116 <- filter(rodovias_mun_rj, CODIGO == "BR-116")
+print(paste0("Extensão BR-116 = ",round(sum(BR_116$EXT_TRECHO),2)))
+
+BR_465 <- filter(rodovias_mun_rj, CODIGO == "BR-465")
+print(paste0("Extensão BR-465 = ",round(sum(BR_465$EXT_TRECHO),2)))
+
+plot(st_geometry(mun_rj), 
+     main     = "Rodovias que cortam o município de RJ",
+     col      = "grey", 
+     axes     = T, 
+     cex.axis = 0.8, 
+     reset    = F)
+plot(st_geometry(BR_040["UF"]), add = T, col= "blue",   lwd = 2)
+plot(st_geometry(BR_101["UF"]), add = T, col= "red",    lwd = 2)
+plot(st_geometry(BR_116["UF"]), add = T, col= "green",  lwd = 2)
+plot(st_geometry(BR_465["UF"]), add = T, col= "yellow", lwd = 2)
+
+
+```
+
+---
+
+FIM DO EXERCÍCIO
+
+---

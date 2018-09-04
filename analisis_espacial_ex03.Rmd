@@ -29,7 +29,7 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ---
 
-Discussão: para calcular a densidade populacional precisamos de duas variáveis, a área por município e a população de cada um deles. O arquivo camada contém a geometria necessária para o cálculo da área de cada município, enquanto o arquivo texto contém a população estimada. O segundo arquivo não contém geometria pelo que será necessário incorporar a variável de população no dataframe do arquivo camada usando uma variável comúm, neste caso, o geocódigo do município. Como o cálculo será para todos os municípios do Brasil, usaremos o sistema de coordenadas geográficas. Para áreas menores recomenda-se transformar os dados para um sistema projetado, que fornece resultados mais precisos já que trabalha diretamente em unidades métricas.
+Discussão: para calcular a densidade populacional precisamos de duas variáveis, a área por município e a população de cada um deles. O arquivo camada contém a geometria necessária para o cálculo da área de cada município, enquanto o arquivo texto contém a população estimada. O segundo arquivo não contém geometria pelo que será necessário incorporar a variável de população no dataframe do arquivo camada usando uma variável comúm, neste caso, o geocódigo do município. Como o cálculo será para todos os municípios do Brasil, usaremos o sistema de coordenadas geográficas. Para áreas menores recomenda-se transformar os dados para um sistema projetado, que fornece resultados mais precisos já que calcula diretamente em unidades métricas.
 
 \
 ---
@@ -219,7 +219,9 @@ menor_dens_utm$AREA_KM2 - area_utm
 
 ```
 
+Como a diferença no cálculo afetaria a densidade populacional?
 
+---
 
  Fim do exercicio
  
