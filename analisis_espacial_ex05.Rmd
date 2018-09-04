@@ -73,10 +73,10 @@ st_crs(brasil) <- 4674
 #brasil
 
 # separo o estado
-uf_rj_geo <- brasil %>% filter(NM_ESTADO == "RIO DE JANEIRO")
+uf.rj.geo <- brasil %>% filter(NM_ESTADO == "RIO DE JANEIRO")
 
 # transformo para SIRGAS UTM, fuso 23S
-uf_rj_utm <- st_transform(uf_rj_geo, crs = 31983)
+uf.rj.utm <- st_transform(uf.rj.geo, crs = 31983)
 ```
 
 ##### EXTRA: plotar objeto.
@@ -103,13 +103,13 @@ st_crs(rodovias) <- 4674
 
 ```{r spatial_42}
 # Seleciono rodovias RJ e transformo para coordenadas planas UTM
-rodovias_rj <- rodovias %>% filter(UF == "RJ")
-rodovias_rj <- st_transform(rodovias_rj, crs = 31983)
+rodovias.rj <- rodovias %>% filter(UF == "RJ")
+rodovias.rj <- st_transform(rodovias.rj, crs = 31983)
 
 # plotar o estado do RJ com as rodovias, observe a opção graticule que calcula uma
 # grade geográfica e a opção axes que plota os eixos.
-plot(st_geometry(uf_rj_utm), graticule = T, axes = T)
-plot(st_geometry(rodovias_rj), add = T, col = "red")
+plot(st_geometry(uf.rj.utm), graticule = T, axes = T)
+plot(st_geometry(rodovias.rj), add = T, col = "red")
 
 ```
 
@@ -122,9 +122,9 @@ ruas <- st_read("data/eixo_logra.shp", options = "ENCODING=UTF-8")
 head(ruas)
 
 # Selecionar as colunas que interessam: 3,5
-ruas_rj <- ruas %>% select(3, 5)
-ruas_rj <- st_transform(ruas_rj, crs = 31983)
-plot(st_geometry(ruas_rj), axes = T)
+ruas.rj <- ruas %>% select(3, 5)
+ruas.rj <- st_transform(ruas.rj, crs = 31983)
+plot(st_geometry(ruas.rj), axes = T)
 ```
 
 ---
@@ -136,8 +136,8 @@ O resultado de aplicar esta função é um vetor lógico, que indica se o regist
 Note o uso do "!" para indicar ou uso inverso da função, ou seja incluir as feições não selecionadas pela função.
 
 ```{r spatial_44}
-ruas_rj <- ruas_rj[!str_detect(ruas_rj$NM_TXTMEMO, "RODOVIA"),]
-ruas_rj
+ruas.rj <- ruas.rj[!str_detect(ruas.rj$NM_TXTMEMO, "RODOVIA"),]
+ruas.rj
 ```
 
 ---
@@ -147,27 +147,27 @@ ruas_rj
 O objeto "brasil" que contém os estados da federação não contém os municípios do estado do Rio de Janeiro, vamos importar um novo arquivo com a malha municipal do Brasil e posteriormente separar os municípios do estado do Rio de Janeiro e finalmente o município do Rio de Janeiro. O procedimento descrito tem apenas finalidade pedagógica, no final será mostrado como abreviar esta procura.
 
 ```{r spatial_45}
-brasil_mun<- st_read("data/brasil_municipios.shp", options = "ENCODING=windows-1252" )
-brasil_mun
+brasil.mun<- st_read("data/brasil_municipios.shp", options = "ENCODING=windows-1252" )
+brasil.mun
 ```
 
 Identifico o estado de Rio de Janeiro e separo municípios.
 
 ```{r spatial_46}
-rj_mun <- brasil_mun[which(brasil_mun$UF == "RIO DE JANEIRO"),]
-rj_mun <- st_transform(rj_mun, crs = 31983)
-rj_mun
+rj.mun <- brasil.mun[which(brasil.mun$UF == "RIO DE JANEIRO"),]
+rj.mun <- st_transform(rj.mun, crs = 31983)
+rj.mun
 ```
 
 Separo o município de Rio de Janeiro do resto dos municípios estaduais.
 
 ```{r spatial_47}
 # Separo municipio de RJ
-mun_rj <- rj_mun[which(rj_mun$NOME_MUN == "RIO DE JANEIRO"),]
+mun.rj <- rj.mun[which(rj.mun$NOME_MUN == "RIO DE JANEIRO"),]
 
 # plotar o município e as rodovias
-plot(st_geometry(mun_rj), col="grey", graticule=T, axes=T, reset = F)
-plot(st_geometry(rodovias_rj), add = T, col = "Red", lwd=3)
+plot(st_geometry(mun.rj), col="grey", graticule=T, axes=T, reset = F)
+plot(st_geometry(rodovias.rj), add = T, col = "Red", lwd=3)
 ```
 
 Como mencionado no começo desta tarefa, se apresenta uma outra forma de abreviar o trabalho.
@@ -175,8 +175,8 @@ A pesquisa usa a função `filter` para separar dos municípios do Brasil, os qu
 
 
 ```{r spatial_48}
-riomunic <- brasil_mun %>% filter(UF == "RIO DE JANEIRO" & NOME_MUN == "RIO DE JANEIRO")
-plot(st_geometry(riomunic))
+rio.munic <- brasil.mun %>% filter(UF == "RIO DE JANEIRO" & NOME_MUN == "RIO DE JANEIRO")
+plot(st_geometry(rio.munic))
 ```
 
 ---
@@ -187,15 +187,15 @@ As rodovias no estado podem ser novamente cortadas para abarcar apenas o municí
 
 ```{r spatial_49}
 # Clip rodovias_rj com limites municipio, mun_rj
-rodovias_mun_rj <- st_intersection(rodovias_rj, mun_rj)
-head(rodovias_mun_rj)
+rodovias.mun.rj <- st_intersection(rodovias.rj, mun.rj)
+head(rodovias.mun.rj)
 
 # Verificação
-plot(st_geometry(mun_rj), 
+plot(st_geometry(mun.rj), 
      col       = "grey", 
      graticule = T, 
      reset     = F)
-plot(st_geometry(rodovias_mun_rj), 
+plot(st_geometry(rodovias.mun.rj), 
      add = T, 
      col = "Red", 
      lwd = 3)
@@ -205,17 +205,17 @@ Criamos um buffer de 200 m entorno das rodovias. Como o objeto criado tem divers
 
 ```{r spatial_50}
 # criar buffer nas rodovias
-rodovias_mun_rj_buff <- st_buffer(rodovias_mun_rj, 200)
+rodovias.mun.rj.buff <- st_buffer(rodovias.mun.rj, 200)
 
 # junta feicoes numa só
-rodovias_mun_rj_buff <- st_union(rodovias_mun_rj_buff)
+rodovias.mun.rj.buff <- st_union(rodovias.mun.rj.buff)
 
 # verificacao
-plot(st_geometry(mun_rj), 
+plot(st_geometry(mun.rj), 
      col       = "grey", 
      graticule = T, 
      reset     = F)
-plot(st_geometry(rodovias_mun_rj_buff), 
+plot(st_geometry(rodovias.mun.rj.buff), 
      add = T, 
      col = "Red")
 ```
@@ -229,22 +229,29 @@ Estamos em condições de definir as ruas que cortam as rodovias no município, 
 ```{r spatial_51}
 # calculo das ruas que cortam as estradas, reesultado é lista, retira os números
 # com [[1]]
-intersecao <- st_intersects(rodovias_mun_rj_buff,ruas_rj)[[1]]
+intersecao <- st_intersects(rodovias.mun.rj.buff,ruas.rj)[[1]]
 
 # criamos um novo objeto com as ruas de intersecção
-ruas_corte <- ruas_rj[intersecao,]
-ruas_corte
+ruas.corte <- ruas.rj[intersecao,]
+ruas.corte
 
 # verificar
-plot(st_geometry(mun_rj), col="grey", graticule=T, axes=T, reset = F)
-plot(st_geometry(ruas_corte), col = "red", add=T, lwd=1.5)
+plot(st_geometry(mun.rj), 
+     col       = "grey", 
+     graticule = T, 
+     axes      = T, 
+     reset     = F)
+plot(st_geometry(ruas.corte), 
+     col = "red", 
+     add = T, 
+     lwd = 1.5)
 ```
 
 O resumo indica que um total de 4325 trechos de ruas e avenidas cortam as rodovias no município. Qual a quantidade de ruas e avenidas? Neste caso vamos usar um pacote muito útil para tratar fatores (como os nomes das ruas), o `forcats`, que está incluído na biblioteca `tidyverse` mas ele deve ser carregado explicitamente, já que não integra o núcleo da biblioteca.
 
 ```{r spatial_52}
 library(forcats)
-unique(ruas_corte$NM_TXTMEMO) %>%  fct_drop %>% fct_count() %>% summarise(n = n())
+unique(ruas.corte$NM_TXTMEMO) %>%  fct_drop %>% fct_count() %>% summarise(n = n())
 ```
 
 O total de avenidas e ruas que cortam as rodovias é de 957.
@@ -256,33 +263,33 @@ O total de avenidas e ruas que cortam as rodovias é de 957.
   - a. Quais as rodovias que cortam o município e quantos trechos tem cada uma?
 
 ```{r spatial_53}
-as.factor(rodovias_mun_rj$CODIGO) %>% fct_drop() %>% summary(("CODIGO"))
+as.factor(rodovias.mun.rj$CODIGO) %>% fct_drop() %>% summary(("CODIGO"))
 ```
 
 
 ```{r spatial_54}
-BR_040 <- filter(rodovias_mun_rj, CODIGO == "BR-040")
-print(paste0("Extensão BR-040 = ",round(sum(BR_040$EXT_TRECHO),2)))
+BR.040 <- filter(rodovias.mun.rj, CODIGO == "BR-040")
+print(paste0("Extensão BR-040 = ",round(sum(BR.040$EXT_TRECHO),2)))
 
-BR_101 <- filter(rodovias_mun_rj, CODIGO == "BR-101")
-print(paste0("Extensão BR-101 = ",round(sum(BR_101$EXT_TRECHO),2)))
+BR.101 <- filter(rodovias.mun.rj, CODIGO == "BR-101")
+print(paste0("Extensão BR-101 = ",round(sum(BR.101$EXT_TRECHO),2)))
 
-BR_116 <- filter(rodovias_mun_rj, CODIGO == "BR-116")
-print(paste0("Extensão BR-116 = ",round(sum(BR_116$EXT_TRECHO),2)))
+BR.116 <- filter(rodovias.mun.rj, CODIGO == "BR-116")
+print(paste0("Extensão BR-116 = ",round(sum(BR.116$EXT_TRECHO),2)))
 
-BR_465 <- filter(rodovias_mun_rj, CODIGO == "BR-465")
-print(paste0("Extensão BR-465 = ",round(sum(BR_465$EXT_TRECHO),2)))
+BR.465 <- filter(rodovias.mun.rj, CODIGO == "BR-465")
+print(paste0("Extensão BR-465 = ",round(sum(BR.465$EXT_TRECHO),2)))
 
-plot(st_geometry(mun_rj), 
+plot(st_geometry(mun.rj), 
      main     = "Rodovias que cortam o município de RJ",
      col      = "grey", 
      axes     = T, 
      cex.axis = 0.8, 
      reset    = F)
-plot(st_geometry(BR_040["UF"]), add = T, col= "blue",   lwd = 2)
-plot(st_geometry(BR_101["UF"]), add = T, col= "red",    lwd = 2)
-plot(st_geometry(BR_116["UF"]), add = T, col= "green",  lwd = 2)
-plot(st_geometry(BR_465["UF"]), add = T, col= "yellow", lwd = 2)
+plot(st_geometry(BR.040["UF"]), add = T, col= "blue",   lwd = 2)
+plot(st_geometry(BR.101["UF"]), add = T, col= "red",    lwd = 2)
+plot(st_geometry(BR.116["UF"]), add = T, col= "green",  lwd = 2)
+plot(st_geometry(BR.465["UF"]), add = T, col= "yellow", lwd = 2)
 
 
 ```
