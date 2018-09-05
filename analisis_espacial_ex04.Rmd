@@ -1,0 +1,108 @@
+---
+title: ""
+author: "Walter Humberto Subiza Pina"
+date: "01 de setembro de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE,
+                      message   = FALSE,
+                      warning   = FALSE,
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+
+
+```{r libraries}
+library(sf)
+library(raster)
+library(tidyverse)
+```
+
+## Exercicio 04 de análise espacial 
+
+### Objetivo:
+
+Efetuar operações  de análise espacial com dados raster
+
+ Insumos:
+ 
+   - Arquivo com modelo de elevações da zona do município de Nova Iguaçú
+   
+   - Arquivo camada com duas áreas de APA do município de Nova Iguaçú 
+   
+---
+
+
+
+## Dados raster
+
+
+### MDEs
+
+Importar um arquivo de elevações do município de Nova Iguaçú. Transformar para sistema SIRGAS2000, UTM fuso 23S. 
+
+```{r spatial_31}
+mde_ni <- raster("data/mde_nova_ig_class.tif")
+crs(mde_ni) <- "+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
+plot(mde_ni)
+```
+
+---
+
+Importar duas área de proteção ambiental no município de Nova Iguaçú. (dados fictícios). Compatibilização de _CRS_.
+
+```{r spatial_32}
+apa_ni <- st_read("data/apa_ni.shp")
+apa_ni <- st_transform(apa_ni, crs=31983)
+head(apa_ni)
+
+plot(mde_ni, reset = F)
+plot(st_geometry(apa_ni), add = T)
+```
+
+---
+
+### mascara com polígonos
+
+Usando os polígonos importados, criar uma máscara no objeto de elevações. A máscara apenas oculta o resto da informação
+
+```{r spatial_33}
+mde_masc <- mask(mde_ni, mask = apa_ni)
+plot(mde_masc)
+```
+
+---
+
+#### extrair valores de altitudes do MDE
+
+Posso fazer diversos cálculos com o MDE importado. Em particular a função `extract` permite, por exemplo, calcular a média de determinada porção do MDE. Os argumentos da função são o objeto raster, o objeto de onde serão extraídos os valores, pode ser tanto um dataframe de pontos como um objeto `sf` poligono e neste caso a função que será aplicada sobre os valores extraídos, aqui será aplicado uma média. Em resumo, vamos calcular a média de altitudes das nossas áreas de interesse.
+
+---
+
+```{r spatial_34}
+altitudes_medias <- raster::extract(mde_ni, apa_ni, fun = mean)
+altitudes_medias
+```
+
+No caso de desejar extrair todas as altitudes, podemos usar a mesma função `extract` sem nenhum outro argumento. No exemplo a seguir salvamos as altitudes num objeto "lista", contendo as altitudes de ambas APA. Podemos acessar os valores com o procedimento padrão de paréntesis retos ou usar um `unlist`.
+
+```{r spatial_35}
+# todas as altitudes
+alt_apa <- raster::extract(mde_ni, apa_ni)
+str(alt_apa)
+summary(alt_apa[[1]])
+summary(alt_apa[[2]])
+```
+
+
+---
+
+ Fim do exercicio
+ 
+ 20180921
+
+---- 
