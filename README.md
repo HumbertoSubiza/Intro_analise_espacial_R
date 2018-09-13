@@ -17,6 +17,8 @@ Em 28 de agosto de 2018 ficou disponível a terceira parte de um total de 4 (map
 
 Em 01 de setembro ficou disponível a quarta parte de um total de 4 (mapas_com_R_04), junto com os dois primeiros exercicios de fixação. Dados para reprodução, atualizados no Dropbox.
 
+Em 07 de setembro ficou disponível a ultima parte dos exercicios com um total de cinco.
+
 Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
 
 ---
