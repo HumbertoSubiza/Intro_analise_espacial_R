@@ -1,0 +1,178 @@
+---
+title: "Análise e visualização de dados espaciais com R - 5a. Parte"
+author: "Walter Humberto Subiza Piña"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center',
+                      collapse  = TRUE, 
+                      out.width = "75%")
+```
+
+## Integrando _R_ com QGIS: _RQGIS_
+
+O seguinte documento e uma tradução parcial, com pequenas modificações, do artigo _RQGIS: Integrating R with QGIS for Statistical Geocomputing_, publicado em _The R Journal 9, 2, 409-428_. O artigo pode ser recuperado em
+  https://rjournal.github.io/archive/2017/RJ-2017-067/RJ-2017-067.pdf.
+
+
+### 1- Introdução
+
+Se definimos um SIG como um sistema que captura, armazena, manipula, analisa, gerencia e apresenta dados geográficos ou espaciais (ou seja que tem um atributo que os relaciona com o espaço), poderíamos dizer, sem temor a errar que o _R_ como ecossistema de análise, tem se tornado um deles.
+
+Muitos pacotes contribuíram nesse sentido, fornecendo classes espaciais e algoritmos de análise (veja por exemplo, `maptools`, `raster`, `sp`, `rgeos`, `rgdal` e `sf`, dentre outros) ou ainda fornecendo conexão com SIGs como _ArcInfo_ e _GRASS_ (`rArcInfo`, `rgrass7`). Apesar disso, _R_ ainda carecia de capacidade de processamento em muitas operações típicas dos SIG, como por exemplo calcular o índice de vegetação ou fazer uma classificação por curvatura. O que estava faltando era uma interfase que permitisse ao _R_ acessar a um dos mais usados SIG de código aberto em uso: o QGIS.
+
+**RQGIS** (para versões 2.X do QGIS) e **RQGIS3** (para 3.X) vem para oferecer essa facilidade e permitir executar operações típicas de SIG no ambiente _R_. Esclarecendo que ao dia de hoje, enquanto o pacote **RQGIS** esta disponível no repositório do CRAN, o **RQGIS3** tem de ser instalado a partir da pagina de um dos autores, em <https://github.com/jannes-m/RQGIS3>.Este documento se va a referir especificamente a la versão 2 de QGIS, mas as funções e procedimentos são idênticos para a versão 3.
+
+O QGIS permite executar scripts em _R_ através da caixa de ferramentas, o que facilita o uso para as pessoas que não querem usá-lo diretamente, mas o acesso às capacidades do QGIS dentro do _R_ tem a vantagem de tornar disponível outras ferramentas de SIG que o próprio QGIS tem, como SAGA, GRASS, TauDem, Lidar, etc.
+
+### 2- Conceitos básicos do pacote _RQGIS_
+
+  - **RQGIS** faz uso da API Python QGIS para acessar os módulos do QGIS
+  
+  - para conseguir o acesso, em primeiro lugar define todas as variáveis de ambiente necessárias e depois estabelece a conexão com o Python, usando o pacote `reticulate`.
+  
+  - **RQGIS** tem dois componentes principais: um código Python que define a classe Python "RQGIS", incluindo os seus métodos, e
+  
+  - um arquivo _R_ que estabelece a interfase com Python QGIS e permite executar o QGIS dentro do _R_.
+  
+  - As principais funções do **RQGIS** são:
+  
+    1- `open_app()`, que estabelece a conexão com Python QGIS
+    
+    2- `find_algoritms()`, para procurar as nomes dos geoalgoritmos;
+    
+    3- `get_args_man()`, para recuperar os parâmetros de processamento dos algoritmos, e
+    
+    4- `run_qgis()`, que chama os algoritmos presentes no QGIS e permite que objetos `sf`, `raster`e `sp` sejam argumentos no processamento, e as saídas sejam carregadas no _R_.
+    
+    
+### 3- Uso do RQGIS
+
+Como o pacote é uma interfase entre o _R_ e o QGIS, vamos supor que este já foi previamente instalado, senão faca a instalação a partir do repositório oficial do QGIS, escolhendo a versão do seu sistema operativo adequada e seguindo as instruções, veja <https://www.qgis.org/en/site/index.html>. Como dica, faça uma instalação completa, a qual disponibiliza os complementos necessários para trabalhar em SIG.
+
+Como primeiro passo temos de carregar a biblioteca e definir as variáveis de ambiente. Neste caso na primeira tentativa não achou a instalação do QGIS, pelo que o caminho foi inserido manualmente.
+
+```{r spatial_56}
+library("RQGIS")
+# set_env()
+set_env("C:/Program Files/QGIS 2.18")
+```
+
+---
+
+Encontradas as variáveis necessárias, vamos estabelecer a conexão com o QGIS, usando a função `open_app`. Esta função define todos os caminhos necessários para a integração, abre o QGIS e importa os módulos Python que precisa.
+
+```{r spatial_57}
+open_app()
+```
+
+---
+
+As duas funções executadas anteriormente (`set_ene()` e `open_app()`) são opcionais, no sentido de ser necessárias como entrada para todas as funções de geoalgoritmos usados, e assim serão chamadas automaticamente caso não ter sido executadas previamente.
+
+---
+
+Para mostrar um exemplo de uso da biblioteca **RQGIS**, será carregado um modelo digital de elevacoes (DEM) e calculadas as curvaturas do terreno a partir dele. Neste exemplo, o DEM pertence à biblioteca **RQGIS**, pelo que indicaremos apenas o caminho e será carregado no momento da execução do algoritmo.
+
+
+```{r spatial_58}
+data("dem", package = "RQGIS")
+```
+
+---
+
+Para localizar geoalgoritmos no QGIS, primeiro faremos uma busca usando expressões regulares que contenham palavras chaves referentes ao algoritmo desejado. A função `find_algoritms()` permite pesquisar todos os algoritmos presentes no QGIS, a opção `names_only = TRUE` nos retorna apenas os nomes dos algoritmos, sem trazer a descrição de cada um deles.
+
+```{r spatial_59}
+find_algorithms(search_term = "curvature",
+                name_only   = TRUE)
+```
+
+---
+
+Na saída vemos que 3 funções de SAGA, 1 de GRASSÁ e 1 de GRASS7 tem o termo “curvature” na descrição do algoritmo. Escolhemos usar o `"grass7:r.slope.aspect"`
+
+Podemos consultar a ajuda do geoalgoritmo usando a função `open_help("grass7:r.slope.aspect")`, o que nao será feito neste tutorial
+
+E conhecer em profundidade todos os parâmetros de processamento com a função `get_usage()` (17 para este algoritmo).
+
+```{r spatial_60}
+get_usage("grass7:r.slope.aspect")
+```
+
+---
+
+A recuperação automática dos parâmetros padrão de cada algoritmo é feita com `get_args_man()`,  sendo recomendável salvá-los para futuras mudanças ou ainda experimentar os efeitos ocasionados por variações nos mesmos.
+
+```{r spatial_61}
+params <- get_args_man(alg = "grass7:r.slope.aspect", options = TRUE)
+params
+```
+
+---
+
+Na sequência especificamos os argumentos necessários. A entrada deste algoritmo deve ser um DEM, mas `rum_qgis()` acepta tambem objetos espaciais armazenados em disco ou no ambiente _R_ do tipo `raster`, `sp` ou `sf`. Note que as saídas do algoritmo são do tipo temporário, mas elas podem ser modificadas indicando o caminho e nome da saída desejada. 
+
+No caso do arquivo estar armazenado em disco, é mais eficiente apenas indicar o caminho até  ele, em vez de carregá-lo em memória. Neste exemplo vamos salvar apenas as saídas específicas de `pcurvatura` e `tcurvature`, deixando as outras derivadas como saidas temporárias (`dx`, `dy`, `dxx`, ..., etc.). O parâmetro de `run_qgis()`, `show_outputs_paths = TRUE` lança na tela todas as saídas e `load_outputs()` carrega as saídas cujos caminhos foram especificados diretamente do QGIS no ambiente _R_.
+
+```{r spatial_62}
+# modificacao dos parametros de processamento
+params$elevation <- dem
+params$pcurvature <-  file.path(tempdir(), "pcurv.tif")
+params$tcurvature <-  file.path(tempdir(), "tcurv.tif")
+
+# processamento
+saida <- run_qgis(alg = "grass7:r.slope.aspect",
+                  params      = params,
+                  load_output = TRUE,
+                  show_output_paths = FALSE)
+```
+
+---
+
+As modificações feitas nos parâmetros podem também ser introduzidas no algoritmo no momento do processamento, sendo que devemos colocar ou uma lista com os argumentos, como feito no anterior fragmento de código ou apenas os argumentos modificados, **mas não ambas formas juntas**.
+
+A função `run_qgis()` retorna uma lista com dois objetos `raster` (`pcurv.tif` e `tcurv.tif`). Se a saída for apenas objetos `raster` serão da classe `RasterLayer`, se for objetos vetoriais, serão `sf`.
+
+O gerenciamento dos parâmetros, `run_qgis()` usa `get_args_man()` com `pass_arg()` por trás para pegar os parâmetros padrão do algoritmo. Consulte a ajuda para mais detalhes sobre a checagem dos parâmetros por parte desta última função.
+
+A visualização da saída pode ser com auxilio das bibliotecas `raster` ou `sf`.
+
+```{r spatial_63}
+library(raster)
+plot(saida[[1]], main = "pcurvature de dem")
+```
+
+---
+
+```{r spatial_64, fig.width=11 }
+plot(stack(saida))
+```
+
+---
+
+FIM da quinta parte
+
+---
+
+CREDITOS: 
+
+  +  Muenchow, J., Schratz, P., and A. Brenning. 2017. RQGIS:
+  Integrating R with QGIS for Statistical Geocomputing. The R
+  Journal 9, 2, 409-428.
+  https://rjournal.github.io/archive/2017/RJ-2017-067/RJ-2017-067.pdf.
+
+  +  Pebesma, E., 2018. Simple Features for R: Standardized Support
+  for Spatial Vector Data. The R Journal,
+  https://journal.r-project.org/archive/2018/RJ-2018-009/
+
+  +    Robert J. Hijmans (2018). raster: Geographic Data Analysis and
+  Modeling. R package version 2.8-4.
+  https://CRAN.R-project.org/package=raster
