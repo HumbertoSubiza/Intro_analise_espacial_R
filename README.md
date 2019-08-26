@@ -21,6 +21,8 @@ Em 07 de setembro ficou disponível a ultima parte dos exercicios com um total d
 
 Em 21 de dezembro foi adicionado uma quinta parte (mapas_com_R_05_RQGIS), referente a integração entre o _R_ e o **QGIS**, permitindo acessar e executar no ambiente _R_, geoalgoritmos de processamento do GIS mencionado e de **GRASS** e **SAGA**.
 
+Em 26 de agosto de 2019 foi atualizada a quinta parte mapas_com_R_05_RQGIS, encontrándo-se ainda em revisão.
+
 Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
 
 ---
