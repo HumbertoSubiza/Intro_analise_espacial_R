@@ -17,6 +17,12 @@ Em 28 de agosto de 2018 ficou disponível a terceira parte de um total de 4 (map
 
 Em 01 de setembro ficou disponível a quarta parte de um total de 4 (mapas_com_R_04), junto com os dois primeiros exercicios de fixação. Dados para reprodução, atualizados no Dropbox.
 
+Em 07 de setembro ficou disponível a ultima parte dos exercicios com um total de cinco.
+
+Em 21 de dezembro foi adicionado uma quinta parte (mapas_com_R_05_RQGIS), referente a integração entre o _R_ e o **QGIS**, permitindo acessar e executar no ambiente _R_, geoalgoritmos de processamento do GIS mencionado e de **GRASS** e **SAGA**.
+
+Em 26 de agosto de 2019 foi atualizada a quinta parte mapas_com_R_05_RQGIS, encontrándo-se ainda em revisão.
+
 Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
 
 ---
@@ -199,6 +205,30 @@ Conceito de **feição** ou **_simple feature_**. Apresentação de pacotes `sf`
  
 --- 
 
+### **5a. Parte (mapas_com_R_05_RQGIS.rmd)**
+
+### Integrando _R_ com QGIS: _RQGIS_
+
+#### 1- Introdução
+
+#### 2- Conceitos básicos do _RQGIS_
+
+#### 3- Uso do RQGIS 
+
+  - set_env()
+  
+  - open_app()
+  
+  - find_algorithms()
+  
+  - get_usage()
+  
+  - get_args_man()
+  
+  - run_qgis()
+
+---
+
 ### Exercícios de aplicação
 
 ---
@@ -312,8 +342,9 @@ CREDITOS:
   +  Edzer Pebesma (2018). sf: Simple Features for R. R package version 0.6-3.
   https://CRAN.R-project.org/package=sf
 
-  +  Robert J. Hijmans (2017). raster: Geographic Data Analysis and Modeling. R package version
-  2.6-7. https://CRAN.R-project.org/package=raster
+  +    Robert J. Hijmans (2018). raster: Geographic Data Analysis and
+  Modeling. R package version 2.8-4.
+  https://CRAN.R-project.org/package=raster
 
   +   Roger Bivand, Tim Keitt and Barry Rowlingson (2018). rgdal: Bindings for the 'Geospatial' Data
   Abstraction Library. R package version 1.3-4. https://CRAN.R-project.org/package=rgdal
