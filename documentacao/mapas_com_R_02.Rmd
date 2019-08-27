@@ -109,7 +109,8 @@ Em cada importação feita, analise a saída e identifique:
 
 ```{r map01}
 # leitura de arquivo vetorial de pontos
-nig_pts <- st_read("data/nova_iguacu_pontos.shp")
+nig_pts <- st_read("nova_iguacu_pontos.shp")
+#D:\Users\humberto.pina\Documents\04_cursos\Intro_analise_espacial_R\exercicios\data
 
 # verificamos a classe do objeto 
 class(nig_pts)
@@ -138,7 +139,7 @@ head(nig_pts,4)
 
 ```{r map03}
 # leitura de arquivo vetorial de linhas
-nig_lin <- st_read("data/nova_iguacu_linha.shp")
+nig_lin <- st_read("nova_iguacu_linha.shp")
 
 # verificamos a classe do objeto 
 class(nig_lin)
@@ -161,7 +162,7 @@ Na leitura de arquivos vetoriais com variáveis gravadas em outros idiomas que o
 
 ```{r map04}
 # leitura de arquivo vetorial com 1 poligono e codificação UTF-8
-nig_pol <- st_read("data/nova_ig_mun_UTF.shp", options = "ENCODING=UTF-8")
+nig_pol <- st_read("nova_ig_mun_UTF.shp", options = "ENCODING=UTF-8")
 ```
 
 ```{r map05}
@@ -180,7 +181,7 @@ Na importação efetuada, qual o _CRS_ e o tipo de geometria? Que informação t
 
 ```{r map06}
 # leitura de arquivo  vetorial multipoligono, codificado UTF-8
-rj_mun <- st_read("data/RJ_municip.shp", options = "ENCODING=UTF-8" )
+rj_mun <- st_read("RJ_municip.shp", options = "ENCODING=UTF-8" )
 ```
 
 ```{r map07}
@@ -207,7 +208,7 @@ No seguinte fragmento de código importamos um arquivo proveniente de imagens de
 <div>
 
 ```{r map08}
-(nig_MDE <- raster("data/MDE_27444ne_v1.tif"))
+(nig_MDE <- raster("MDE_27444ne_v1.tif"))
 class(nig_MDE)
 ```
 
@@ -222,7 +223,7 @@ Identifique a extensão geográfica do arquivo, seu tamanho e o _CRS_. Quantas c
 Importamos uma ortofoto, neste caso, o objeto criado será da classe `RasterBrick`.
 
 ```{r map09}
-nig_orto <- brick("data/27444ne.tif")
+nig_orto <- brick("27444ne.tif")
 class(nig_orto)
 ```
 
@@ -250,7 +251,7 @@ No seguinte código, vemos o tamanho de um arquivo raster em memória e em disco
 object.size(nig_orto)
 
 # em disco:
-file.size("data/27444ne.tif")
+file.size("27444ne.tif")
 ```
 
 Uma outra função, `stack()` cria objetos _raster_ multicamadas. Neste caso podemos juntar diversas camadas de um mesmo objeto ou objetos diferentes, mas é necessário que as diversas camadas estejan **no mesmo CRS e com a mesma resolução espacial**.
@@ -445,7 +446,7 @@ Para efetuar a conversão é importante conhecer previamente o SGR do dataframe,
 
 ```{r map18}
 # leitura de um arquivo csv e verificação da estrutura
-esper_df <- read.csv("data/df_100.csv")
+esper_df <- read.csv("df_100.csv")
 head(esper_df, 3)
 ```
 
@@ -464,7 +465,7 @@ head(esper_sf, 2)
 Para verificar que o objeto agora tem o atributo espacial vamos fazer um gráfico simples.
 
 ```{r map21}
-plot(esper_sf["C1"], 
+plot(esper_sf["C2"], 
      main = "Dataframe transformado em objeto sf", 
      axes =T)
 ```
@@ -491,11 +492,11 @@ A partir do objeto criado vamos salvar os registros num novo dataframe, preserva
 
 ```{r map22}
 st_write(esper_sf,                       # dados a gravar
-         "data/esper_novo.csv",        # novo arquivo com caminho de garavação
+         "esper_novo.csv",        # novo arquivo com caminho de garavação
          layer_options = "GEOMETRY=AS_XY", # opção para salvar a geometria
          delete_dsn=TRUE)               # se o nome já existe, apague o arquivo primeiro
 
-esper_novo <- read.csv("data/esper_novo.csv") # ler o arquivo gravado
+esper_novo <- read.csv("esper_novo.csv") # ler o arquivo gravado
 head(esper_novo)
 ```
 

@@ -21,7 +21,6 @@ library(sf)
 library(tmap)
 library(raster)
 library(ggplot2)
-library(ggmap)
 ```
 
 ### Visualização de dados georreferenciados
@@ -98,7 +97,7 @@ A função específica que genera a quadrícula é `st_graticule()` e pode servi
 
 ```{r map23}
 # Importação do dado
-br <- st_read("data/Brasil_Uf.shp")
+br <- st_read("Brasil_Uf.shp")
 
 # projeção Cônica Conforme de Lambert modificada, com paralelos 0 e -25
 proj_ccl <- "+proj=lcc +lat_1=0 +lat_2=-25 +lat_0=-32 +lon_0=-50 +x_0=0 +y_0=0 +ellps=aust_SA +units=m +no_defs"
@@ -332,7 +331,7 @@ Até aqui vimos apenas mapas com dados vetoriais, no caso de objetos matriciais 
 ---
 
 ```{r map33, fig.height=6, fig.width=7}
-nig_orto <- brick("data/27444ne.tif")
+nig_orto <- brick("27444ne.tif")
 
 plotRGB(nig_orto, 
         axes    = T, 
@@ -343,7 +342,7 @@ No caso de uma única camada:
 
 ```{r map34}
 # leitura do arquivo
-ni_mde <- raster("data/MDE_nova_ig_class.tif")
+ni_mde <- raster("MDE_nova_ig_class.tif")
 
 # cartograma
 plot(ni_mde,
@@ -377,14 +376,14 @@ Vamos fazer um mapa rápido da região central do Rio de Janeiro.
 </div>
 
 ```{r map35}
-# Estabelecemos as coordenadas do centro de nosso mapa
-Rio <-c(lon = -43.2751, lat = -22.9235)
-
-# Extraemos o mapa de Google Maps, especificando um zoom a sua escolha
-mapRio <- get_map(location = Rio, zoom = 11)
-
-#Visualizamos o mapa com ggpmap
-ggmap(mapRio) # + coord_map("mercator")
+# # Estabelecemos as coordenadas do centro de nosso mapa
+# Rio <-c(lon = -43.2751, lat = -22.9235)
+# 
+# # Extraemos o mapa de Google Maps, especificando um zoom a sua escolha
+# mapRio <- get_map(location = Rio, zoom = 11)
+# 
+# #Visualizamos o mapa com ggpmap
+# ggmap(mapRio) # + coord_map("mercator")
 ```
 
 ---
@@ -398,7 +397,7 @@ Note que com essa função rápida, as possibilidades de personalizar ou adicion
 </div>
 
 ```{r, map36}
-qmap(Rio, zoom = 11)
+# qmap(Rio, zoom = 11)
 ```
 
 ---
@@ -444,13 +443,13 @@ Usaremos algumas das opcções na sequencia.
 
 ```{r, map37}
 #  Obter o mapa, tipo Stamen
-mapRioStamen <- get_map(location = Rio, 
-                       zoom     = 11, 
-                       source   = "stamen", 
-                       maptype  = "toner")
-
-# Visualize o mapa
-ggmap(mapRioStamen)
+# mapRioStamen <- get_map(location = Rio, 
+#                        zoom     = 11, 
+#                        source   = "stamen", 
+#                        maptype  = "toner")
+# 
+# # Visualize o mapa
+# ggmap(mapRioStamen)
 ```
 
 \

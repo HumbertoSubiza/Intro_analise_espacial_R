@@ -88,10 +88,10 @@ Se o dado é pontual, cria um círculo de raio correspondente à distância, enq
 
 ```{r map35}
 # leitura de arquivo vetorial com 1 poligono e codificação UTF-8
-(nova_ig_pol <- st_read("data/nova_ig_mun_UTF.shp", options = "ENCODING=UTF-8"))
+(nova_ig_pol <- st_read("nova_ig_mun_UTF.shp", options = "ENCODING=UTF-8"))
 
 # leitura de arquivo vetorial de pontos
-(nova_ig_pts <- st_read("data/nova_iguacu_pontos.shp"))
+(nova_ig_pts <- st_read("nova_iguacu_pontos.shp"))
 ```
 
 Os dois dados importados estão em coordenadas geográficas, pelo que será feita sua transformação para _CRS_ 31983 (SIRGAS UTM fuso 23S)
@@ -237,7 +237,7 @@ Em exercícios anteriores, temos importado um arquivo multipolígno com os munic
 
 ```{r map41}
 # leitura de arquivo  vetorial multipoligono, codificado UTF-8
-rj_mun <- st_read("data/RJ_municip.shp", options = "ENCODING=UTF-8" )
+rj_mun <- st_read("RJ_municip.shp", options = "ENCODING=UTF-8" )
 
 #visualização
 plot(rj_mun["NM_MUNICIP"], axes=T,graticule=T)
@@ -328,7 +328,7 @@ round(df[2],1)
 ```{r map45}
 #leitura de arquivo de pontos, apenas as colunas da geometria (1 e 2)
 # e salvamos como matriz
-nova_ig_line <- as.matrix(read.csv("data/nova_ig_pts_utm.csv")[, 1:2])
+nova_ig_line <- as.matrix(read.csv("nova_ig_pts_utm.csv")[, 1:2])
 
 # tranformação em linestring
 nova_ig_linestring <- st_linestring(nova_ig_line)
@@ -365,15 +365,15 @@ Quando é usado o `left_join()`, o novo objeto inclui todos os elementos do obje
 
 ```{r map46}
 # leitura de arquivo de dados
-df1 <- read.csv("data/df_1.csv")
+df1 <- read.csv("df_1.csv")
 
 # transformação do primeiro em objeto sf
 df1_sf <- st_as_sf(df1, coords = c("Long", "Lat"), crs= 4674, dim = "XY")
 
 # novos dados
-df2 <- read.csv2("data/df_2.csv")
+df2 <- read.csv2("df_2.csv")
 
-df3 <- read.csv2("data/df_3.csv")
+df3 <- read.csv2("df_3.csv")
 
 # visualizar os dados
 head(df1_sf, 2)
@@ -476,7 +476,7 @@ Nos seguintes exemplos vamos usar algumas das funções mencionadas.
 #### a- Leitura de dado matricial em camada única (MDE)
 
 ```{r map49}
-(nova_iguacu_MDE_27444ne <- raster("data/MDE_27444ne_v1.tif"))
+(nova_iguacu_MDE_27444ne <- raster("MDE_27444ne_v1.tif"))
 ```
 
 ---
@@ -615,12 +615,12 @@ O pacote `raster`tem um formato nativo próprio que grava e lê em forma eficien
 ```{r map57}
 # gravação do raster como arquivo tipo tif
 writeRaster(nova_iguacu_class, 
-            "data/mde_nova_ig_class.tif",
+            "mde_nova_ig_class.tif",
             overwrite = T)
 
 #gravação do raster com formato nativo
 writeRaster(nova_iguacu_class, 
-            "data/mde_nova_ig_class_nativo",
+            "/mde_nova_ig_class_nativo",
             overwrite = T)
 ```
 

@@ -120,9 +120,10 @@ params
 
 Na sequência especificamos os argumentos necessários. A entrada deste algoritmo deve ser um DEM, mas `rum_qgis()` acepta tambem objetos espaciais armazenados em disco ou no ambiente _R_ do tipo `raster`, `sp` ou `sf`. Note que as saídas do algoritmo são do tipo temporário, mas elas podem ser modificadas indicando o caminho e nome da saída desejada. 
 
-No caso do arquivo estar armazenado em disco, é mais eficiente apenas indicar o caminho até  ele, em vez de carregá-lo em memória. Neste exemplo vamos salvar apenas as saídas específicas de `pcurvatura` e `tcurvature`, deixando as outras derivadas como saidas temporárias (`dx`, `dy`, `dxx`, ..., etc.). O parâmetro de `run_qgis()`, `show_outputs_paths = TRUE` lança na tela todas as saídas e `load_outputs()` carrega as saídas cujos caminhos foram especificados diretamente do QGIS no ambiente _R_.
+No caso do arquivo estar armazenado em disco, é mais eficiente apenas indicar o caminho até  ele, em vez de carregá-lo em memória. Neste exemplo vamos salvar apenas as saídas específicas de `pcurvatura`  (perfil da curvatura do terreno) e `tcurvature` (tangente da curvatura do terreno), deixando as outras derivadas como saidas temporárias (`dx`, `dy`, `dxx`, ..., etc.). O parâmetro de `run_qgis()`, `show_outputs_paths = TRUE` lança na tela todas as saídas e `load_outputs()` carrega as saídas cujos caminhos foram especificados diretamente do QGIS no ambiente _R_.
 
 ```{r spatial_62}
+library(rgdal)
 # modificacao dos parametros de processamento
 params$elevation <- dem
 params$pcurvature <-  file.path(tempdir(), "pcurv.tif")
@@ -147,7 +148,8 @@ A visualização da saída pode ser com auxilio das bibliotecas `raster` ou `sf`
 
 ```{r spatial_63}
 library(raster)
-plot(saida[[1]], main = "pcurvature de dem")
+plot(dem)
+plot(saida[[1]], main = "perfil de curvatura de dem")
 ```
 
 ---
