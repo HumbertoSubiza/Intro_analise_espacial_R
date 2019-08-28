@@ -61,7 +61,7 @@ Como primeiro passo temos de carregar a biblioteca e definir as variáveis de am
 
 ```{r spatial_56}
 library("RQGIS")
-# set_env()
+#set_env()
 set_env("C:/Program Files/QGIS 2.18")
 ```
 
