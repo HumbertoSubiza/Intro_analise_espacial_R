@@ -56,7 +56,7 @@ knitr::opts_chunk$set(echo      = TRUE,
 
 #### 3. Armazenamento de **geometrycollection** em base de dados Postgre/Postgis e importação de um objeto da base de dados para o ambiente _R_.
 
-Os dados para reproduzir o documento encontram-se na pasta "/data" e devem ser baixados de [_dropbox_](https://www.dropbox.com/sh/2gmhfx1ycos0ywh/AAAjVB6T6oygAq6nmFQEMUMNa?dl=0). A pasta completa deve estar no seu diretorio de trabalho.
+Os dados para reproduzir o documento encontram-se na pasta "/data" e devem ser baixados de [_dropbox_](https://www.dropbox.com/sh/0cknc7k11rscr6v/AADrkv-ytUKP1MhO7U6I1X6Ta?dl=0). A pasta completa deve estar no seu diretorio de trabalho.
 
 ---
 
