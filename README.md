@@ -1,10 +1,12 @@
 # Análise e visualização de dados espaciais com R
 
-### Walter Humberto Subiza Piña - 2018
+### Walter Humberto Subiza Piña - 2018-2021
 
 email : walter.pina1954@gmail.com
 
 twitter : @humbertosubiza
+
+github:HumbertoSubiza
  
 Estes tutoriais, de carater introdutório, estão baseados principalmente nas bibliotecas `sf`, `raster` para análise espacial de dados georreferenciados e algumas especificas para manipulação e visualização desses dados. As _vignettes_ dos pacotes além da documentação mencionada no final de cada tutorial devem consultar-se para aprofundar nos temas expostos.
 
