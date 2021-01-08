@@ -21,7 +21,9 @@ Em 07 de setembro ficou disponível a ultima parte dos exercicios com um total d
 
 Em 21 de dezembro foi adicionado uma quinta parte (mapas_com_R_05_RQGIS), referente a integração entre o _R_ e o **QGIS**, permitindo acessar e executar no ambiente _R_, geoalgoritmos de processamento do GIS mencionado e de **GRASS** e **SAGA**.
 
-Em 26 de agosto de 2019 foi atualizada a quinta parte mapas_com_R_05_RQGIS, encontrándo-se ainda em revisão.
+Em 26 de agosto de 2019 foi atualizada a quinta parte mapas_com_R_05_RQGIS
+
+Em 08 de janeiro de 2021 foi adicionada uma sexta parte referente a geometria de objetos vectoriais em _R_.
 
 Comentários, criticas e sugestões podem ser encaminhados ao email mencionado acima e serão muito apreciados.
 
@@ -226,6 +228,44 @@ Conceito de **feição** ou **_simple feature_**. Apresentação de pacotes `sf`
   - get_args_man()
   
   - run_qgis()
+
+---
+
+### **6a. Parte (mapas_com_R_06_geometrias.rmd)**
+
+### Geometria de objetos espaciais em _R_
+
+#### 1. Criação de geometrias vetoriais, incluindo **geometrycollection**
+
+  - Ponto simples
+  
+  - Objetos multi-ponto
+  
+  - Objeto linha 
+  
+  - Objeto Multilinhas
+  
+  - Criação de polígono
+  
+  - Conjunto de geometrias, **geometry_collection** 
+ 
+--- 
+  
+#### 2. Criar objetos **geometrycollection** a partir de arquivos tipo ESRI e extração dos seus diferentes componentes.
+
+  - Primeiro arquivo
+  
+  - Simplificando a geometria
+  
+  - Segundo arquivo
+  
+  - Criação do objeto **geometry_collection**
+  
+  - Extração de dados
+
+---
+
+#### 3. Armazenamento de **geometrycollection** em base de dados Postgre/Postgis e importação de um objeto da base de dados para o ambiente _R_.
 
 ---
 
