@@ -97,7 +97,7 @@ Dar entrada nas coordenadas do objeto com um vetor numérico. O ponto pode ser b
 
 ---
 
-```{r}
+```{r spatial_65}
 p <- st_point(c(1, 3, 4)) # ponto tridimensional
 
 plot(p, 
@@ -113,7 +113,7 @@ A entrada tem de ser matriz, neste caso dada pela função rbind(), que combina 
  
  ---
 
-```{r}
+```{r spatial_66}
 mp <- st_multipoint(rbind(c(4, 1), 
                           c(1, 3), 
                           c(3, 5), 
@@ -145,7 +145,7 @@ plot(mp2,
 
  A entrada da geometria deve ser uma matriz.
 
-```{r}
+```{r spatial_67}
 l <- st_linestring(rbind(c(1, 5), 
                          c(4, 4),
                          c(4, 1),
@@ -164,7 +164,7 @@ plot(l,
 
 A entrada da geometria é feita através de uma lista contendo os diferentes lances da linha.
 
-```{r}
+```{r spatial_68}
 ml <- st_multilinestring((list(rbind(c(1, 5), 
                                      c(4, 4), 
                                      c(4, 1), 
@@ -200,7 +200,7 @@ Em forma semelhante a multi-linha, usa uma lista mas com a diferença que os pon
 
 ---
 
-```{r}
+```{r spatial_69}
 pol <- st_polygon(list(rbind(c(0, 1), 
                              c(0, 4), 
                              c(4, 6), 
@@ -216,7 +216,7 @@ plot(pol, lwd = 3)
 
 *geometry_collection** é uma combinação dos objetos já apresentados.
 
-```{r}
+```{r spatial_70}
 geomcol <- c(st_geometrycollection(list(mp, 
                                         mp2, 
                                         ml, 
@@ -231,7 +231,7 @@ Visualização, o acesso se realiza através de parêntesis reto, a ordem é a m
 
 ---
 
-```{r}
+```{r spatial_71}
 plot(geomcol[[1]], 
                  axes  = T, 
                  col   = "red", 
@@ -257,7 +257,7 @@ Lembramos de atualizar os caminhos dos arquivos dos fragmentos de código seguin
 
 ---
 
-```{r}
+```{r spatial_72}
 # armezanar a localização do arquivo 
 path <- '~/Github/Intro_analise_espacial_R/data/br_uf_2019.shp'
 brasil <- read_sf(path) # estados do Brasil, IBGE 2019
@@ -271,7 +271,7 @@ Quando não é necessária toda a precisão do objeto, podemos simplificá-la de
 
 ---
 
-```{r}
+```{r spatial_73}
 cat("Tamanho inicial do objeto brasil= ", object.size(brasil), "bytes")
 
 plot(brasil["nm_uf"], axes = T, main = "Brasil completo")
@@ -282,7 +282,7 @@ plot(brasil["nm_uf"], axes = T, main = "Brasil completo")
 O fator de simplificação deve ser compatível com o _CRS_ do arquivo, neste caso temos coordenadas geográficas, pelo que _dTolerance = 0.1_ corresponde a um décimo de grau ou aproximadamente 11 km.
 
 
-```{r}
+```{r spatial_74}
 brasil_simples <- st_simplify(brasil, 
                               dTolerance       = 0.1,
                               preserveTopology = T)
@@ -290,7 +290,7 @@ brasil_simples <- st_simplify(brasil,
 
 ---
 
-```{r}
+```{r spatial_75}
 cat("Tamanho final= ", object.size(brasil_simples), "bytes")
 
 plot(brasil_simples["nm_uf"], axes = T, main = "Brasil simplificado")
@@ -300,7 +300,7 @@ plot(brasil_simples["nm_uf"], axes = T, main = "Brasil simplificado")
 
 Verificação do _CRS_
 
-```{r}
+```{r spatial_76}
 # 
 st_crs(brasil_simples)
 # colocando o CRS, neste caso não usamos transformação entre CRS
@@ -315,7 +315,7 @@ O argumento _value = NULL_ elimina os atributos e obtém-se apenas uma geometria
  
 ---
 
-```{r}
+```{r spatial_77}
 br_geom <- st_geometry(brasil_simples, value = NULL) # value = NULL elimina os atributos
 ```
 
@@ -325,7 +325,7 @@ br_geom <- st_geometry(brasil_simples, value = NULL) # value = NULL elimina os a
 
 ---
 
-```{r}
+```{r spatial_78}
 # capitais dos estados, arquivo local
 path2 <- '~/Github/Intro_analise_espacial_R/data/capitais.shp'
 capitais <- read_sf(path2) 
@@ -337,13 +337,13 @@ Verificar o _CRS_
 
 ---
 
-```{r}
+```{r spatial_79}
 st_crs(capitais) # verifica CRS
 ```
 
 ---
 
-```{r}
+```{r spatial_80}
 capitais <- st_transform(capitais, 4674) # transformação para SIRGAS 2000
 st_crs(capitais) # verificação
 ```
@@ -359,7 +359,7 @@ Extração da geometria multi-ponto para sua posterior combinação numa *geomet
 
 ---
 
-```{r}
+```{r spatial_81}
 cap_geom <- st_geometry(capitais, value = NULL)
 ```
 
@@ -373,7 +373,7 @@ Com as geometrias armazenadas nas variáveis _cap_geom_ e _br_geom_, criamos o o
 
 --
 
-```{r}
+```{r spatial_82}
 br_geom_coll <- c(st_geometrycollection(cap_geom),
                   st_geometrycollection(br_geom))
 
@@ -392,7 +392,7 @@ Se temos um objeto do tipo _geometry_collection_ no nosso ambiente global, a ext
 
 Extração e visualização das capitais
 
-```{r}
+```{r spatial_83}
 br_cap <- st_collection_extract(
                                 br_geom_coll,
                                 type = c("POINT"),
@@ -406,7 +406,7 @@ plot(br_cap, axes = T, lwd =5)
 
 Extração e visualização dos estados
 
-```{r}
+```{r spatial_84}
 br_uf  <- st_collection_extract(
                                 br_geom_coll,
                                 type = c("POLYGON"),
@@ -418,7 +418,7 @@ plot(br_uf, axes = T, lwd =3)
 
 ### Visualização completa
 
-```{r}
+```{r spatial_85}
 plot(br_uf, 
      reset = F, 
      lwd   = 3, 
@@ -437,7 +437,7 @@ plot(br_cap,
 Para um correto armazenamento na base de dados, o objeto **sfg** deve ser convertido em objeto **sf**, com o passo intermedio da transformação da geometria em objeto **sfc**.
 
 
-```{r}
+```{r spatial_86}
 br_geom <- st_sfc(br_geom_coll, crs = 4674) # geometry_collection para sfc
 
 br_geo <- st_sf(br_geom)                    # sfc para sf
@@ -448,7 +448,7 @@ Tendo o o objeto **sfc**, necessitamos uma estabelecer uma conexão com banco de
 
 ---
 
-```{r message=FALSE}
+```{r spatial_87, message=FALSE}
 library(RPostgres)
 con <- dbConnect(Postgres(), 
                             user     = 'postgres',
@@ -469,7 +469,7 @@ No fragmento que segue podemos incluir comandos SQL para capturar toda ou parte 
 
 ---
 
-```{r}
+```{r spatial_88}
 try(conn <- dbConnect(Postgres(), 
                                user     = 'postgres',
                                password = 'postgres', 
@@ -488,7 +488,7 @@ if (exists("conn") && !inherits(conn, "try-error")) {
 
 Verificação da geometria do objeto lido.
 
-```{r}
+```{r spatial_89}
 st_geometry_type(br_geom_db)
 ```
 
@@ -496,7 +496,7 @@ st_geometry_type(br_geom_db)
 
 Finalmente para verificar a integradidade do objeto lido vamos repetir a leitura do contorno do Brasils e seus 27 estados.
 
-```{r}
+```{r spatial_90}
 br_uf  <- st_collection_extract(
                                 br_geom_db,
                                 type = c("POLYGON"),
