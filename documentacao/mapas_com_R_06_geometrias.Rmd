@@ -1,0 +1,515 @@
+---
+title: "Análise e visualização de dados espaciais com R - 6a. Parte"
+author: "Walter Humberto Subiza Piña"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+## Geometria de objetos espaciais em R
+
+### Indice
+
+---
+
+#### Introdução
+
+---
+
+#### 1. Criação de geometrias vetoriais, incluindo **geometrycollection**
+
+  - Ponto simples
+  
+  - Objetos multi-ponto
+  
+  - Objeto linha 
+  
+  - Objeto Multilinhas
+  
+  - Criação de polígono
+  
+  - Conjunto de geometrias, **geometry_collection** 
+ 
+--- 
+  
+#### 2. Criar objetos **geometrycollection** a partir de arquivos tipo ESRI e extração dos seus diferentes componentes.
+
+  - Primeiro arquivo
+  
+  - Simplificando a geometria
+  
+  - Segundo arquivo
+  
+  - Criação do objeto **geometry_collection**
+  
+  - Extração de dados
+
+---
+
+#### 3. Armazenamento de **geometrycollection** em base de dados Postgre/Postgis e importação de um objeto da base de dados para o ambiente _R_.
+
+Os dados para reproduzir o documento encontram-se na pasta "/data" e devem ser baixados de [_dropbox_](https://www.dropbox.com/sh/2gmhfx1ycos0ywh/AAAjVB6T6oygAq6nmFQEMUMNa?dl=0). A pasta completa deve estar no seu diretorio de trabalho.
+
+---
+
+#### Introdução
+
+O documento refere-se exclusivamente a geometrias vetoriais, objetos **sfg** da biblioteca _sf_ os quais são o bloco fundamental da categoria de objetos espaciais ou georreferenciados em _R_. É ao mesmo tempo um complemento do documento **_mapas_com_R_02.Rmd_**, que aprofunda na temática da geometria de objetos espaciais com a biblioteca _sf_ e para uma visão mais ampla, recomenda-se sua leitura prévia.
+
+A representação de objetos na superfície terrestre se realiza através de objetos vetoriais do tipo ponto, linha ou polígono e suas variantes multi. Inclui-se também uma nova categoria, **geometrycollection**, nao suportada pelo formato ESRI de arquivos tipo camada (shp). 
+
+Este novo formato tem-se tornado cada dia mais comum, desde sua inclusão em bases de dados como _Postgre/Postgis_ ou formatos de dados como _geoJSON_ e aponta tornar-se padrão num futuro próximo para o armazenamento e tratamento de informações georreferenciadas e análise espacial.
+
+Por último salienta-se que apesar de se um tema árido ou pouco atraente, está na base da compreensão do análise espacial e vai levar a evitar posteriores erros de manipulação, interpretação ou visualização dos nossos dados.
+
+---
+
+### 1. Criação de geometrias vetoriais (**sfg**), incluindo **geometrycollection**
+
+```{r}
+library(sf)
+```
+
+---
+
+ Na criação dos objetos, a entrada das coordenadas da geometria em _R_ deve ser:
+ 
+---
+
+| geometria| objeto de entrada| função|
+|:------------|:------------|:------------|
+|ponto simples| vector numérico|st_point()|
+| multipontos/linha|matriz| st_multipoint(), st_linestring()|
+|multilinhas/(multi)polígonos/conjunto geometrias | listas| st_polygon()/ st_multilinestring()/ st_geometrycollection()|
+        
+        
+### Criação de um objeto ponto simples
+
+Dar entrada nas coordenadas do objeto com um vetor numérico. O ponto pode ser bidimensional, tridimensional (incluindo altitude por exemplo) ou ainda incluindo um atributo (tipo M, veja <https://r-spatial.github.io/sf/articles/sf1.html>).
+
+---
+
+```{r}
+p <- st_point(c(1, 3, 4)) # ponto tridimensional
+
+plot(p, 
+     axes = T, 
+     lwd  = 5, 
+     col  = "red")
+```
+
+
+### Criacao de objetos multi-ponto
+
+A entrada tem de ser matriz, neste caso dada pela função rbind(), que combina os pontos no sentido das linhas.
+ 
+ ---
+
+```{r}
+mp <- st_multipoint(rbind(c(4, 1), 
+                          c(1, 3), 
+                          c(3, 5), 
+                          c(6, 6)))
+
+mp2 <- st_multipoint(rbind(c(4, 3), 
+                           c(2, 4), 
+                           c(5, 2), 
+                           c(4, 2)))
+
+plot(mp, 
+     axes  = T, 
+     lwd   = 5, 
+     col   = "red",
+     reset = F)
+
+plot(mp2, 
+     axes = T, 
+     lwd  = 5, 
+     col  = "blue",
+     add  = T)
+
+``` 
+
+---
+
+
+### Criação de objeto linha 
+
+ A entrada da geometria deve ser uma matriz.
+
+```{r}
+l <- st_linestring(rbind(c(1, 5), 
+                         c(4, 4),
+                         c(4, 1),
+                         c(0, 3)))
+
+plot(l, 
+     axes = T, 
+     lwd  = 3, 
+     col  = "red")
+```
+
+---
+
+
+### Criação de objeto Multilinhas
+
+A entrada da geometria é feita através de uma lista contendo os diferentes lances da linha.
+
+```{r}
+ml <- st_multilinestring((list(rbind(c(1, 5), 
+                                     c(4, 4), 
+                                     c(4, 1), 
+                                     c(2, 2), 
+                                     c(3, 3)), 
+                               rbind(c(1, 2), 
+                                     c(2, 4)))))
+
+ml2 <- st_multilinestring((list(rbind(c(2, 4), 
+                                      c(3, 4), 
+                                      c(4, 2), 
+                                      c(3, 2), 
+                                      c(2, 1)), 
+                                rbind(c(2, 2), 
+                                      c(3, 1)))))
+
+plot(ml,
+     col   = "red", 
+     axes  = T, 
+     lwd   = 3,
+     reset = F)
+plot(ml2, 
+     col = "blue", 
+     add = T,
+     lwd = 3)
+```
+
+---
+
+### Criação de polígono
+
+Em forma semelhante a multi-linha, usa uma lista mas com a diferença que os pontos inicial e final são idênticos, para indicar o fechamento.
+
+---
+
+```{r}
+pol <- st_polygon(list(rbind(c(0, 1), 
+                             c(0, 4), 
+                             c(4, 6), 
+                             c(6, 1), 
+                             c(0, 1))))
+
+plot(pol, lwd = 3)
+```
+
+---
+
+### Criação de conjunto de geometrias, **geometry_collection** 
+
+*geometry_collection** é uma combinação dos objetos já apresentados.
+
+```{r}
+geomcol <- c(st_geometrycollection(list(mp, 
+                                        mp2, 
+                                        ml, 
+                                        ml2, 
+                                        pol)))
+st_geometry_type(geomcol) # verificar tipo objeto
+```
+
+---
+
+Visualização, o acesso se realiza através de parêntesis reto, a ordem é a mesma da criação da coleção.
+
+---
+
+```{r}
+plot(geomcol[[1]], 
+                 axes  = T, 
+                 col   = "red", 
+                 lwd   = 3,
+                 reset = F)           
+plot(geomcol[[2]], col = "blue",  add = T, lwd = 5)
+plot(geomcol[[3]], col = "red",   add = T, lwd = 3)
+plot(geomcol[[4]], col = "blue",  add = T, lwd = 3)
+plot(geomcol[[5]],                add = T, lwd = 2)
+```
+
+---
+
+## 2. Criação de um objeto **geometry collection** a partir de arquivo de camadas tipo ESRI (shp)
+
+---
+
+Vamos construir uma *geometry_collection* a partir de dois arquivos tipo camada, um multi-polígono dos estados do Brasil e o outro multi-ponto, com as capitais de cada um dos 27 estados. Os dois arquivos foram baixados em 2019 a partir do portal do IBGE <https://www.ibge.gov.br/geociencias/organizacao-do-territorio/estrutura-territorial.html>.
+
+Lembramos de atualizar os caminhos dos arquivos dos fragmentos de código seguintes com a localização real do seu computador.
+
+### Primeiro arquivo, armazenado localmente
+
+---
+
+```{r}
+# armezanar a localização do arquivo 
+path <- '~/Github/Intro_analise_espacial_R/data/br_uf_2019.shp'
+brasil <- read_sf(path) # estados do Brasil, IBGE 2019
+```
+
+---
+
+### Simplificando o contorno do Brasil e estados
+
+Quando não é necessária toda a precisão do objeto, podemos simplificá-la de forma de facilitar o seu armazenamento, manipulação ou visualização. Verificamos o seu tamanho antes e depois da simplificação, o processo pode precisar de várias tentativas até chegar a uma visualização e tamanho adequados.
+
+---
+
+```{r}
+cat("Tamanho inicial do objeto brasil= ", object.size(brasil), "bytes")
+
+plot(brasil["nm_uf"], axes = T, main = "Brasil completo")
+```
+
+---
+
+O fator de simplificação deve ser compatível com o _CRS_ do arquivo, neste caso temos coordenadas geográficas, pelo que _dTolerance = 0.1_ corresponde a um décimo de grau ou aproximadamente 11 km.
+
+
+```{r}
+brasil_simples <- st_simplify(brasil, 
+                              dTolerance       = 0.1,
+                              preserveTopology = T)
+```
+
+---
+
+```{r}
+cat("Tamanho final= ", object.size(brasil_simples), "bytes")
+
+plot(brasil_simples["nm_uf"], axes = T, main = "Brasil simplificado")
+```
+
+---
+
+Verificação do _CRS_
+
+```{r}
+# 
+st_crs(brasil_simples)
+# colocando o CRS, neste caso não usamos transformação entre CRS
+st_crs(brasil_simples) <- 4674
+```
+
+---
+
+Extração da geometria multi-polígono, para sua posterior combinação numa **geometry_collection**.
+
+O argumento _value = NULL_ elimina os atributos e obtém-se apenas uma geometria da classe **geometry_collection**, em caso de não colocar este argumento o objeto obtido é da super classe **geometry**, mantendo as geometrias para cada um dos atributos do objeto inicial. Veja as diferenças entre classes em <https://r-spatial.github.io/sf/articles/sf1.html>.
+ 
+---
+
+```{r}
+br_geom <- st_geometry(brasil_simples, value = NULL) # value = NULL elimina os atributos
+```
+
+---
+
+## Segundo arquivo
+
+---
+
+```{r}
+# capitais dos estados, arquivo local
+path2 <- '~/Github/Intro_analise_espacial_R/data/capitais.shp'
+capitais <- read_sf(path2) 
+```
+
+---
+
+Verificar o _CRS_
+
+---
+
+```{r}
+st_crs(capitais) # verifica CRS
+```
+
+---
+
+```{r}
+capitais <- st_transform(capitais, 4674) # transformação para SIRGAS 2000
+st_crs(capitais) # verificação
+```
+
+
+---
+
+Foi efetuada uma transformação de CRS devido a que o arquivo já possui um definido, sendo WGS84.
+
+---
+
+Extração da geometria multi-ponto para sua posterior combinação numa *geometry_collection**
+
+---
+
+```{r}
+cap_geom <- st_geometry(capitais, value = NULL)
+```
+
+Salienta-se que para a correta criação da geometria, o CRS de todas as geometrias envolvidas deve ser o mesmo.
+
+---
+
+### Criação do objeto **geometrycollection**
+
+Com as geometrias armazenadas nas variáveis _cap_geom_ e _br_geom_, criamos o objeto coleção de geometrias.
+
+--
+
+```{r}
+br_geom_coll <- c(st_geometrycollection(cap_geom),
+                  st_geometrycollection(br_geom))
+
+st_geometry_type(br_geom_coll) # verificar tipo objeto
+```
+
+---
+
+### Extração de dados
+
+Se temos um objeto do tipo _geometry_collection_ no nosso ambiente global, a extração de geometrias pode ser efetuada em forma muito simples com a função _st_collection_extract()_, com o  argumento _type_ indicando já seja "POINT", "LINE" ou "POLYGON".
+
+<https://r-spatial.github.io/sf/reference/st_collection_extract.html>
+
+---
+
+Extração e visualização das capitais
+
+```{r}
+br_cap <- st_collection_extract(
+                                br_geom_coll,
+                                type = c("POINT"),
+                                warn = FALSE)
+
+plot(br_cap, axes = T, lwd =5)
+
+```
+
+---
+
+Extração e visualização dos estados
+
+```{r}
+br_uf  <- st_collection_extract(
+                                br_geom_coll,
+                                type = c("POLYGON"),
+                                warn = FALSE)
+plot(br_uf, axes = T, lwd =3)
+```
+
+---
+
+### Visualização completa
+
+```{r}
+plot(br_uf, 
+     reset = F, 
+     lwd   = 3, 
+     axes  = T)
+
+plot(br_cap, 
+     add = T, 
+     col = "red", 
+     lwd = 5)
+```
+
+---
+
+### 3. Armazenamento de **geometrycollection** em base de dados Postgre/Postgis e importação de um objeto da base de dados para o ambiente _R_.
+
+Para um correto armazenamento na base de dados, o objeto **sfg** deve ser convertido em objeto **sf**, com o passo intermedio da transformação da geometria em objeto **sfc**.
+
+
+```{r}
+br_geom <- st_sfc(br_geom_coll, crs = 4674) # geometry_collection para sfc
+
+br_geo <- st_sf(br_geom)                    # sfc para sf
+```
+
+---
+Tendo o o objeto **sfc**, necessitamos uma estabelecer uma conexão com banco de dados (biblioteca RPostgres) e gravação do arquivo sf, com apenas geometria. Vamos usar a biblioteca _RPostgres_.
+
+---
+
+```{r message=FALSE}
+library(RPostgres)
+con <- dbConnect(Postgres(), 
+                            user     = 'postgres',
+                            password = 'postgres', 
+                            dbname   = 'r_databases', 
+                            port     = 5433)
+
+# grava geometry+collection sf para database
+dbWriteTable(con, "br_geo", br_geo, overwrite = T )
+dbDisconnect(con)
+```
+
+---
+
+### Leitura a partir da base de dados Postgres
+
+No fragmento que segue podemos incluir comandos SQL para capturar toda ou parte da tabela desejada.
+
+---
+
+```{r}
+try(conn <- dbConnect(Postgres(), 
+                               user     = 'postgres',
+                               password = 'postgres', 
+                               dbname   = 'r_databases', 
+                               port     = 5433))
+
+if (exists("conn") && !inherits(conn, "try-error")) {
+  br_geom_db = st_read(conn, 
+                       query = "select * from br_geo;")
+  print(st_crs(br_geom_db)) # CRS da base de dados!
+  dbDisconnect(conn)
+ }
+```
+
+---
+
+Verificação da geometria do objeto lido.
+
+```{r}
+st_geometry_type(br_geom_db)
+```
+
+---
+
+Finalmente para verificar a integradidade do objeto lido vamos repetir a leitura do contorno do Brasils e seus 27 estados.
+
+```{r}
+br_uf  <- st_collection_extract(
+                                br_geom_db,
+                                type = c("POLYGON"),
+                                warn = FALSE)
+plot(br_uf, axes = T, lwd =3)
+```
+
+----
+
+CREDITOS: 
+
+  +  Pebesma, E., 2018. Simple Features for R: Standardized Support
+  for Spatial Vector Data. The R Journal,
+  https://journal.r-project.org/archive/2018/RJ-2018-009/
+
+### Fim do tutorial
