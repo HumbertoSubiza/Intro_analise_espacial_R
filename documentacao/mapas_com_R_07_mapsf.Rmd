@@ -1,0 +1,147 @@
+---
+title: "Análise e visualização de dados espaciais com R - 7a. Parte"
+author: "Walter Humberto Subiza Piña"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+## Mapsf - mapas temáticos com objectos sf, simples e rápido
+
+### Indice
+
+---
+
+### 1- _mapsf_
+
+O novo pacote _mapsf_ vem a continuar o pacote cartography, que vai continuar a ter suporte. Confira em <https://rgeomatic.hypotheses.org/2212>. Ele pretende ser um pacote para criar rapidamente mapas temáticos com objetos _sf_ e quando carregada a biblioteca, automáticamente carrega a biblioteca _sf_.
+
+```{r}
+library(mapsf)
+```
+
+
+### 2- Baixando os dados
+
+O seguinte link permite baixar os dados necessários para fazer este pequeno tutorial:
+
+  https://www.dropbox.com/sh/ogz8vy5wgtp9n9w/AAAuE3b_0Hf3b2is7OyTFQpIa?dl=1
+  
+Copie e cole num navegador para obter um arquivo .zip contendo dois arquivos de camadas vetoriais. Copie todos para um diretório a sua eleção e lembre de modificar o caminho em cada fragmento de código que o necessite.
+
+---
+
+Carregando os dados...
+
+```{r}
+path <- '~/Github/Intro_analise_espacial_R2/exercicios/data'
+rj_mun <- read_sf(paste0(path,'/rj_mun.shp')) # estados do Brasil, IBGE 2019
+
+```
+
+---
+
+A principal função do pacote é _mf_map_, que requer pelo menos tres argumentos: um objeto _sf_, uma variável para mapear e um tipo de mapa (confira com ?mf_map os tipos de mapas disponíveis). No sequinte fragmento de código vamos colocar o mapa do Brasil, com as opções básicas .
+
+---
+
+```{r}
+mf_map(x    = rj_mun, 
+       "nm_mun", 
+       type = "base")
+```
+
+---
+
+A função _mf_layout_ coloca 5 opções que é possivel personalizar, confira com ?mf_layout.
+
+```{r}
+mf_map(x    = rj_mun, 
+       "nm_mun", 
+       type = "base")
+
+mf_layout(
+  title = "Municipios do Rio de Janeiro",
+  credits = "Walter Subiza & IBGE",
+  scale = TRUE,
+  arrow = TRUE,
+  frame = TRUE)
+```
+
+---
+
+É possível usar diversos temas já definidos, como na sequencia.
+
+---
+
+```{r}
+
+
+mf_map(x = rj_mun, 
+       "nm_mun", 
+       type = "base")
+# Plot a shadow
+
+mf_layout(
+  title = "Municipios do Rio de Janeiro",
+  credits = "Walter Subiza, fonte: IBGE",
+  scale = TRUE,
+  arrow = TRUE,
+  frame = TRUE)
+
+# Initiate a base map
+mf_init(x = rj_mun, theme = "agolalight")
+# Plot a shadow
+mf_shadow(rj_mun, add = TRUE)
+# plot municipalities 
+mf_map(rj_mun, "nm_mun", type = "base", add = TRUE)
+# layout
+mf_layout(title = "Municipios do Rio de Janeiro", 
+          credits = paste0("Walter Subiza, fonte: IBGE", 
+                           packageVersion("mapsf")))
+```
+
+
+---
+
+```{r}
+mf_map(x    = rj_mun, 
+       "nm_mun", 
+       type = "base")
+
+mf_layout(
+  title = "",
+  credits = "",
+  scale = F,
+  arrow = F,
+  frame = T)
+
+mf_label(
+  rj_mun,
+  "nm_mun",
+  col ='black',
+  cex = 0.7,
+  overlap = F,)
+
+mf_title(txt = "Municipios do Rio de Janeiro", 
+         pos = 'center', 
+         tab = T, 
+         bg  = 'yellow', 
+         fg  = 'black', 
+         cex = 1.0,
+         inner = F)
+mf_arrow(pos = "topright", 'black')
+mf_credits("Walter Subiza, fonte: IBGE", pos = "bottomleft", col ='black', cex = 1, font = 3)
+mf_scale(100, pos = "bottomright", lwd = 2, cex = 1.3, col = "black" , unit = "km")
+
+```
+```
+
