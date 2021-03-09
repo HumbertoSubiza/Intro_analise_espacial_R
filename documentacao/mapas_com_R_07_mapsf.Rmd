@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo      = TRUE,
 
 ### 1- _mapsf_
 
-O novo pacote _mapsf_ vem a continuar o pacote cartography, que vai continuar a ter suporte. Confira em <https://rgeomatic.hypotheses.org/2212>. Ele pretende ser um pacote para criar rapidamente mapas temáticos com objetos _sf_ e quando carregada a biblioteca, automáticamente carrega a biblioteca _sf_.
+O novo pacote _mapsf_ vem a substituir o pacote cartography, que ainda assim vai continuar a ter suporte. Confira em <https://rgeomatic.hypotheses.org/2212>. Ele tem como objetivo criar rapidamente mapas temáticos com objetos _sf_ e  carrega automáticamente a biblioteca, _sf_.
 
 ```{r}
 library(mapsf)
@@ -41,39 +41,43 @@ Copie e cole num navegador para obter um arquivo .zip contendo dois arquivos de 
 
 Carregando os dados...
 
+---
+
 ```{r}
-path <- '~/Github/Intro_analise_espacial_R2/exercicios/data'
+path <- '~/Github/Intro_analise_espacial_R2/exercicios/data' # modificar o caminho...
 rj_mun <- read_sf(paste0(path,'/rj_mun.shp')) # estados do Brasil, IBGE 2019
 
 ```
 
 ---
 
-A principal função do pacote é _mf_map_, que requer pelo menos tres argumentos: um objeto _sf_, uma variável para mapear e um tipo de mapa (confira com ?mf_map os tipos de mapas disponíveis). No sequinte fragmento de código vamos colocar o mapa do Brasil, com as opções básicas .
+A principal função do pacote é _mf_map_, que requer pelo menos tres argumentos: um objeto _sf_, uma variável para mapear e um tipo de mapa (confira com ?mf_map os tipos de mapas disponíveis). No sequinte fragmento de código vamos colocar o mapa do estado do Rio de Janeiro, Brasil, com as opções básicas .
 
 ---
 
 ```{r}
 mf_map(x    = rj_mun, 
-       "nm_mun", 
-       type = "base")
+       'nm_mun', 
+       type = 'base')
 ```
 
 ---
 
-A função _mf_layout_ coloca 5 opções que é possivel personalizar, confira com ?mf_layout.
+A função _mf_layout_ coloca alguns itens adicionais no mapa que é possivel personalizar, confira com ?mf_layout.
+
+---
 
 ```{r}
 mf_map(x    = rj_mun, 
-       "nm_mun", 
-       type = "base")
+       'nm_mun', 
+       type = 'base')
 
 mf_layout(
-  title = "Municipios do Rio de Janeiro",
-  credits = "Walter Subiza & IBGE",
-  scale = TRUE,
-  arrow = TRUE,
-  frame = TRUE)
+  title = 'Municipios do Rio de Janeiro', # título
+  credits = 'Walter Subiza, fonte: IBGE', # créditos e fonte dos dados
+  scale = TRUE,                           # escala
+  arrow = TRUE,                           # seta do norte geográfico
+  frame = TRUE)                           # borde del mapa
 ```
 
 ---
@@ -83,25 +87,11 @@ mf_layout(
 ---
 
 ```{r}
-
-
-mf_map(x = rj_mun, 
-       "nm_mun", 
-       type = "base")
-# Plot a shadow
-
-mf_layout(
-  title = "Municipios do Rio de Janeiro",
-  credits = "Walter Subiza, fonte: IBGE",
-  scale = TRUE,
-  arrow = TRUE,
-  frame = TRUE)
-
-# Initiate a base map
+# mapa base com tema
 mf_init(x = rj_mun, theme = "agolalight")
-# Plot a shadow
+# incluir uma sombra para o polígono
 mf_shadow(rj_mun, add = TRUE)
-# plot municipalities 
+# incluir os municípios do estado
 mf_map(rj_mun, "nm_mun", type = "base", add = TRUE)
 # layout
 mf_layout(title = "Municipios do Rio de Janeiro", 
@@ -109,13 +99,16 @@ mf_layout(title = "Municipios do Rio de Janeiro",
                            packageVersion("mapsf")))
 ```
 
+---
+
+Aqui um mapa tipo _choroplet_, para ser gerado precisa de uma variável numérica.
 
 ---
 
 ```{r}
 mf_map(x    = rj_mun, 
-       "nm_mun", 
-       type = "base")
+       "area_km2", 
+       type = "choro")
 
 mf_layout(
   title = "",
@@ -124,17 +117,10 @@ mf_layout(
   arrow = F,
   frame = T)
 
-mf_label(
-  rj_mun,
-  "nm_mun",
-  col ='black',
-  cex = 0.7,
-  overlap = F,)
-
-mf_title(txt = "Municipios do Rio de Janeiro", 
+mf_title(txt = 'Municipios do Rio de Janeiro', 
          pos = 'center', 
          tab = T, 
-         bg  = 'yellow', 
+         bg  = 'lightgray', 
          fg  = 'black', 
          cex = 1.0,
          inner = F)
@@ -143,5 +129,61 @@ mf_credits("Walter Subiza, fonte: IBGE", pos = "bottomleft", col ='black', cex =
 mf_scale(100, pos = "bottomright", lwd = 2, cex = 1.3, col = "black" , unit = "km")
 
 ```
+
+---
+
+Se queremos ampliar um detalhe do mapa, usamos a função _mf_inset_on_ para abrir o detalhe e _mf_inset_off_ para fechá-lo. Confira na sequencia o mapa do Estado do Rio de Janeiro com detalhe do Município de Armação dos Búzios, os comentários esclarecem algumas opções feitas.
+
+
+```{r}
+# selecionar município, Armação dos Búzios
+rj_sel <- rj_mun[c(33),]
+
+# iniciar o mapa base com tema "ink"
+mf_init(x     = rj_mun, 
+        theme = "ink")
+# incluir os municípios do estado
+mf_map(rj_mun, 
+       "nm_mun", 
+       type = "base", 
+       add  = TRUE)
+# incluir o município selecionado no mapa principal na cor vermelha
+mf_map(rj_sel, add = T, col = "red")
+
+################### DETALHE ######################
+# abrir o detalhe
+mf_inset_on(x   = rj_sel, 
+            pos = "topleft", 
+            cex = .4)
+# centrar o detalhe no município selecionado
+mf_init(rj_sel)
+# incluir os municípios do estado
+mf_map(rj_mun, "nm_mun", type = "base", add = TRUE)
+# colocar o municipio selecionado
+mf_map(rj_sel, add = T, col = "red")
+#  colocar o nome do municipio
+mf_label(rj_sel, 
+         var = "nm_mun", 
+         col = "black",
+         cex = 0.9,
+         lwd = 1)
+#  barra de escala no detalhe
+mf_scale(size = 5)
+# fechar o detalhe
+mf_inset_off()
+############################################
+
+# barra de escala no mapa principal
+mf_scale(size = 100, lwd = 3)
+# layout mapa principal
+mf_title(txt = 'Localização do Municipio de Armação do Búzios - Rio de Janeiro', 
+         pos = 'center', 
+         tab = T, 
+         bg  = 'lightgray', 
+         fg  = 'black', 
+         cex = 1.0,
+         inner = F)
+mf_arrow(pos = "topright", col = 'black')
 ```
+
 
