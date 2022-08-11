@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo      = TRUE,
 
 #### 1. Introdução
 
-Objetivo: apresentar algumas formas de tratar e visualizar os dados georreferenciados no _R_.
+Objetivo: apresentar diversas formas de tratar e visualizar os dados georreferenciados no _R_.
 
 Conceito de **feição** ou **_simple feature_**. Apresentação de pacotes `sf`, `raster` e `sp`.
 
