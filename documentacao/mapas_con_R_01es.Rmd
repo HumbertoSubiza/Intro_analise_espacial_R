@@ -14,41 +14,45 @@ knitr::opts_chunk$set(echo      = TRUE,
                       fig.align = 'center')
 ```
 
-El presente curso es una traducción al español del curso ofrecido en 2017 en el IBGE- Rio de Janeiro, Brasil por el autor. Es creación propia y los diversos derechos autorales son mencionados. 
+**El presente curso es una traducción al español del curso ofrecido en 2017 en el IBGE- Rio de Janeiro, Brasil por el autor. Es creación propia y los diversos derechos autorales son mencionados.**
 
 ### Indice
 
 #### 1. Introducción
 
-Objetivo: apresentar diversas formas de tratar e visualizar os dados georreferenciados no _R_.
+Objetivo: presentar las diversas formas de tratar e visualizar los datos georreferenciados en _R_.
 
-Conceito de **feição** ou **_simple feature_**. Apresentação de pacotes `sf`, `raster` e `sp`.
+Concepto de **_simple feature_**. Presentación de paquetes de funciones, `sf`, `raster` y `sp`.
 
-#### 2. Objetos classe S-3 e S-4
+\
 
-  a- Definição
+#### 2. Objetos clase S-3 y S-4
+
+  a- Definición
         
-  b- Representação e geometria vetorial
+  b- Representación y geometria vectorial
   
-  + Dimensão e coordenadas
+  + Dimensión y coordenadas
       
-  + organização das feições simples no `sf`
+  + organización de las **_simple feature_** en `sf`
       
-  + Métodos para cada classe
+  + Métodos para cada clase
       
   + Tipos de geometria
 
-  c- Dados matriciais ou raster
+  c- Datos matriciales o raster
   
-#### 3. Sistema Geodésico de Referência - SGR ( _CRS_)
+\
 
- a- _CRS_ não projetado ou de coordenadas geográficas
+#### 3. Sistema Geodésico de Referencia - SGR ( _CRS_)
 
- b- _CRS_ de coordenadas projetadas
+ a- _CRS_ no proyectado o de coordenadas geográficas
 
-  Tabelas de SGR no Brasil
+ b- _CRS_ de coordenadas proyectadas
+
+  Tablas de SGR en Brasil y Uruguay
   
-     Exercício identificação de SGR
+     Ejercício identificación de SGR
 
 \
 ---
