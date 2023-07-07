@@ -362,7 +362,7 @@ En los archivos vectoriales de capa o _shape_ existen varios archivos que define
 
 Para los datos raster, la misma información puede estar en un archivo separado o incluirse en el encabezado del propio archivo, junto con los datos.
 
-Las siguientes tablas resumen las principales SGR, con coordenadas geográficas y proyectadas, que podemos encontrar en Uruguay y Brasil.
+Las siguientes tablas resumen las principales SGR, con coordenadas geográficas y proyectadas, que podemos encontrar en Uruguay.
 
 <div/>
 
@@ -375,10 +375,8 @@ Las siguientes tablas resumen las principales SGR, con coordenadas geográficas 
 ```{r tabela01, echo=FALSE}
 CRS_geo <- tibble::tribble(
              ~Nombre, ~"código EPSG", ~"Definición formato Proj.4",  ~Observaciones,
-  "Córrego Alegre",    4225, "“+proj=longlat +ellps=intl +towgs84=-206,172,-6,0,0,0,0 +no_defs”",    "Obsoleto",
-           "SAD69",    4291,  "“+proj=longlat +ellps=GRS67 +towgs84=-57,1,-41,0,0,0,0 +no_defs”",    "Obsoleto",
-           "WGS84",    4326,                             "“+proj=longlat +datum=WGS84 +no_defs”", "Não oficial",
-      "SIRGAS2000",    4674,      "“+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs”",     "Oficial"
+  "Yacaré",    4309, "“+proj=longlat +ellps=intl +towgs84=-124.45,183.74,44.64,-0.4384,0.5446,-0.9706,-2.1365 +no_defs +type=crs”",    "Obsoleto",
+           "SIRGAS-ROU98",    5380,                             "“+proj=longlat +ellps=WGS84 +no_defs +type=crs”",     "Oficial"
   )
 
 require(knitr)
@@ -399,9 +397,8 @@ kable_styling(
 ```{r tabela02, echo=FALSE}
 CRS_UTM <- tibble::tribble(
       ~Nombre, ~"código EPSG", ~"Definición formato Proj.4",    ~Observaciones,
-  "UTM-23S",   31983, "“+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 23 Sur",
-  "UTM-24S",   31984, "“+proj=utm +zone=24 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 24 Sur",
-  "UTM-25S",   31985, "“+proj=utm +zone=25 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 25 Sur",
+  "SIRGAS-ROU98 / UTM-21S",   5382, "“+proj=utm +zone=21 +south +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs”",   "Huso 21 Sur",
+  "SIRGAS-ROU98 / UTM-22S",   5083, "“+proj=utm +zone=22 +south +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs”",   "Huso 22 Sur"
   )
 
 require(knitr)
@@ -453,6 +450,6 @@ CREDITOS:
   +   Roger Bivand, Tim Keitt and Barry Rowlingson (2018). rgdal: Bindings for the 'Geospatial' Data
   Abstraction Library. R package version 1.3-4. https://CRAN.R-project.org/package=rgdal
  
-  + [EPSG](https://www.epsg-registry.org/) 
+  + [EPSG](https://epsg.io/) 
   
 ---
