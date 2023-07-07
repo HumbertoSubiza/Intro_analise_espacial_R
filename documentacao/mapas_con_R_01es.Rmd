@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo      = TRUE,
                       fig.align = 'center')
 ```
 
-**El presente curso es una traducción al español del curso ofrecido en 2017 en el IBGE- Rio de Janeiro, Brasil por el autor. Es creación propia y los diversos derechos autorales son mencionados.**
+**El presente curso es una traducción al español del curso ofrecido en 2017 en el IBGE- Rio de Janeiro, Brasil por el autor. Es creación propia y los diversos derechos autorales son mencionados a lo largo de los diversos capítulos.**
 
 ### Indice
 
@@ -58,149 +58,148 @@ Concepto de **_simple feature_**. Presentación de paquetes de funciones, `sf`, 
 ---
 \
 
-### 1- Introdução
+### 1- Introducción
 
  <div style="text-align:justify" markdown="1">
  
-A inclusão da informação espacial nos dados estatísticos introduz um elemento qualitativo importante, tanto na etapa de análise, quanto na de disseminação da informação e tem-se tornado tema recorrente no ámbito do geoprocessamento e da estatística. Essa tendência global também se consolida a nível nacional, (criação da Infraestrutua Nacional de Dados Espaciais - INDE), assim como no IBGE, por exemplo, com a realização em 2016 de um Seminário de Metodologia que foi denominado “Integração de Dados Estatísticos e Geoespaciais e Visualização de Informações” ou ainda o planejamento do novo CensoGeo, previsto para o ano de 2022. 
+Cuando agregamos información espacial a los datos estadísticos introduzimos un elemento cualitativo importante, tanto en la etapa de análisis, como en la de divulgación de la información y se ha vuelto un tema recurrente en el ámbito del geoprocesamiento y la estadística. Esa tendencia global tambiém se consolida a nível nacional, con por ejemplo lacreación de la Infraestructura de Dados Espaciales de Uruguay - IDEuy. 
 
-A representação espacial se formaliza por meio do conceito de **feição simples** ou **_simple feature_**. A feição está definida na norma **ISO 19125-1:2004** que descreve como os objetos do mundo real podem ser representados em computadores, enfatizando o aspecto da geometria espacial. 
+La representación espacial se formaliza por medio del concepto **_simple feature_**. Ella está definida en la norma **ISO 19125-1:2004** que describe como los objetos del mundo real pueden ser representados en computadores, enfatizando el aspecto de la geometria espacial. 
 
 A norma estabelece também como esses elementos podem ser armazenados e recuperados de bases de dados e ainda que tipo de operações podem ser efetuadas. Esse padrão é amplamente usado e implementado em bases de dados (como PostGis) e software de  Sistemas de Informação Geográfica – SIG, como QGIS e ArcGis. Uma feição pode ser, por exemplo, uma casa, uma árvore ou uma estrada. Da mesma forma, um conjunto de feições pode-se considerar uma única feição, um conjunto de árvores pode ser uma floresta ou um conjunto de casas, uma vila ou cidade.
 
-Esta documentação, de caráter introdutório, tem como **objetivo apresentar formas de tratar e visualizar os dados no _R_, considerando sua geometria e espacialidade **. Não tem a intenção de substituir o uso de SIG, principalmente na elaboração de mapas, cartogramas finais ou análises complexas, mas mostrar que é possível manipular e visualizar dados espaciais sem ter que, nesse processo, fazer o caminho do _R_ ao SIG e vice-versa várias vezes. Para isso serão apresentados dois pacotes específicos: `sf` e `raster`, além de alguns  para visualização. 
+Estos documentos, de carácter introductório, tienen como **objetivo presentar las formas de tratar y visualizar los datos en _R_, considerando su geometria y espacialidad **. No tienen la intención de substituir el uso de SIG, principalmente en la elaboración de mapas, cartogramas o análisis complejos, sino demostrar que eas posible manipular y visualizar datos espaciales sin tener que, en ese proceso, hacer el caminho del _R_ al SIG y vice-versa varias veces. Para eso serán presentados dos paquetes específicos: `sf` y `raster`, además de algunos  para visualización. 
 
-Especificamente, o pacote `sf` para dados vetoriais, facilita a leitura e manipulação se comparado a pacotes anteriores, como o `sp`, já que os objetos `sf` são dataframes com atributos espaciais e podem ser manipulados como tais usando pacotes como `tidyverse::dplyr`. Os objetos criados contém os metadados do SGR e guardam numa única coluna os atributos de georrefenciamento. A representação das feições é similar ao **PostGIS** e todas as funções comecam com o prefixo `st_`, em referência a espacio e tempo, facilitando assim sua búsqueda e uso.
+Especificamente, el paquete `sf` para datos vectoriais, facilita la leitura y manipulación cuando se le comparado con paquetes anteriores, como el `sp`, ya que los objetos `sf` son dataframes con atributos espaciales y pueden ser manipulados como tales usando paquetes como `tidyverse::dplyr`. Los objetos creados contienen los metadados del SGR y guardan en una única columna los atributos de georrefenciamento. La representación de los objetos es similar al **PostGIS** y todas las funciones comienzan con el prefijo `st_`, en referencia a espacio y tempo, facilitando asíu su búsqueda y uso.
 
-O anterior pacote de manipulação de dados georreferenciados `sp` tem uma longa trajetória no sistema _R_ e está amplamente difundido sendo incluído como dependência em diversos pacotes, já o novo pacote `sf` está em fase de desenvolvimento, mas tem um futuro muito promissor enquanto mais simples de usar. Desta forma, é importante conhecer como é feita a conversão de formato entre os dois pacotes, a fim de aproveitar ao máximo os benefícios de ambos.
+El anterior paquete de manipulación de datos georreferenciados `sp` tiene una larga trayectória en el sistema _R_ y está ampliamente difundido siendo incluído como dependencia en diversos paquetes, ya el paquete `sf` está en fase de desarrollo, pero tiene un futuro muy próspero siendo más simple de usar. De esta forma, esa importante conocer como e realizada la conversión de formato entre los dos paquetes, con la finalidad de aprovechar al máximo los beneficios de ambos.
 
 </div>
 
-A transformação de um objeto `sf` em `sp` e viceversa, pode ser feita da seguinte forma:
+La transformación de un objeto `sf` en `sp` y viceversa, puede ser hecha de la seguinte forma:
 
-  1- `sf` em `sp`, usando a função `as`:
+  1- `sf` en `sp`, usando la función `as`:
   
     objeto_sp <- as(objeto_sf, Class = "Spatial")
   
-  2- `sp` em `sf`, usando a função `st_as_sf`:
+  2- `sp` en `sf`, usando la función `st_as_sf`:
   
     objeto_sf <- st_as_sf(objeto_sp)
  
- Em relação aos dados matriciais ou _raster_, o pacote `raster` permite a manipulação e visualização de dados desse tipo. Vale salientar a aparição de um novo pacote `star`, em fase de desenvolvimento, que tratará todo tipo de dados espaço-temporais, vetoriais e matriciais, numa abordagem do tipo `tidyverse`.
+ En relación a los datos matriciales o _raster_, el paquete `raster` permite la manipulación y visualización de datos de ese tipo. Vale la pena resaltar la aparición de un nuevo paquete `star`, que tratará todo tipo de datos espacio-temporales, vectoriales y matriciales, en un abordaje del tipo `tidyverse`.
 
-Nesta primeira parte veremos alguns conceitos teóricos necessários para entender como se configuram e relacionam os dados com o espaço terrestre.
+En esta primera parte veremos algunos conceptos teóricos necesarios para entender como se configuran y relacionan los datos con el espacio terrestre.
 
-Nos próximos documentos trataremos de:
+En los próximos documentos trataremos de:
 
-  . como importar dados vetoriais com o pacote `sf`.
+  . como importar datos vectoriais con o paquete `sf`.
   
-  . como importar dados matriciais ou _raster_ com uma ou várias camadas, usando o pacote `raster`.
+  . como importar datos matriciales o _raster_ com una o varias capas, usando el paquete `raster`.
   
-  . manipulação e transformação dos dados vetoriais e matriciais.
+  . manipulación y transformación de los datos vectoriais y matriciales.
   
-  . gravação de objetos vetoriais ou matriciais, com os pacotes `sf` e `raster`.
+  . grabación de objetos vetoriales o matriciales, con los paquetes `sf` y `raster`.
   
-  . algumas funções de análisis de dados georreferenciados.
+  . algunas funciones de análisis de datos georreferenciados.
   
-  . visualização de dados georreferenciados, com os pacotes `plot`, `tmap`, `ggmap`, `ggplot`.
+  . visualización de datos georreferenciados, con os paquetes `plot`, `tmap`, `ggmap`, `ggplot`.
  
 \
 --- 
 \
 
-### 2- Objetos classe S-3 e S-4
+### 2- Objetos clase S-3 y S-4
 
 ---
 
-#### a- Definição
+#### a- Definición
 
 <div style="text-align:justify" markdown="1">
 
-Para entender como os dados espaciais são tratados no _R_, precisamos ver que tipos de sistemas orientados a objeto suporta e em qual deles, esses dados se encaixam.
+Para entender como los datos espaciales son tratados en _R_, precisamos ver que tipos de sistemas orientados a objeto soporta y en cual de ellos, esos datos se encajan.
 
-O _R_ tem várias classes de sistemas orientados a objeto, as mais usadas são S3 e S4, cada uma com sua definição, atributos e métodos específicos. 
+El _R_ tiene varias clases de sistemas orientados a objeto, los más usados son S3 y S4, cada uno con su definición, atributos y métodos específicos. 
 
-Quando é criado um vetor, ou fazemos a importação de uma tabela, dataframe ou lista estamos criando objetos S3. O pacote `sf` define os objetos como do tipo S-3, facilitando assim sua manipulação e dos seus atributos. Mas específicamente os objetos `sf` são uma sub-classe da classe `data.frame` e da classe `tbl_df`.
+Cuando es creado un vector, o hacemos la importación de ua tabla, dataframe o lista estamos creando objetos S3. El paquete `sf` define objetos como tipo S-3, facilitando así su manipulación y atributos. Pero específicamente los objetos `sf` son una subclase de la clase `data.frame` y la clase `tbl_df`.
 
-Os objetos S4, usados nos dados raster ou matriciais, são derivados do S3 e possuem uma definição mais formal da classe. Em dados espaciais, os pacotes `raster` e `sp`criam objetos classe 4.
+Los objetos de S4, que se utilizan en ráster o datos de ráster, se derivan de S3 y tienen una definición más formal de la clase. En datos espaciales, los paquetes `raster` y `sp` crean objetos de clase 4.
 
-Na tabela seguint apresentamos as principais diferenças entre as classes S-3 e S-4
+En la siguiente tabla presentamos las principales diferencias entre las clases S-3 y S-4
 
-|Classe S-3             | Classe S-4              |
+|Clase S-3             | Clase S-4              |
 |-----------------------|-------------------------|
-|Sem definição formal| Classe definida com setClass()|
-|Objetos criados com atributo de classe|Objetos criados usando new() ou com pacotes específicos como `raster`|
-|Acesso de atributos com \$|Acesso de atributos com \@ ou usando slots()|
+|Sin definición formal| Clase definida con setClass()|
+|Objetos creados con atributo de clase|Objetos creados usando new() o co paquetes específicos como `raster`|
+|Acceso a atributos con \$|Acceso a atributos con \@ o usando slots()|
 
 </div>
 
 ---
 
-#### b- Representação e geometria vetorial
+#### b- Representación y geometria vectorial
 
 <div style="text-align:justify" markdown="1">
 
-Os objetos do mundo real precisam ser representados usando tipos diferentes de geometria. Toda geometria é composta de pontos simples da mesma classe, em diferentes espaços dimensionais. 
+Los objetos del mundo real deben representarse utilizando diferentes tipos de geometría. Toda la geometría se compone de puntos simples de la misma clase, en diferentes espacios dimensionales.
  
-Assim sendo podemos representar os objetos usando três tiposbásicos  de geometria: **ponto, linha e polígono**. Um ponto pode ser representado numa superficie por dois atributos espacias, X e Y, que são suas coordenadas. Uma linha é uma sucessão de pontos e um polígono é uma sucessão de linhas que não se cruzam e fecham num determinado ponto inicial. No _R_ , é possível a combinação no mesmo objeto  de diversas geometrias como pontos, linhas e polígonos, o que não acontece nos SIG.
+Por lo tanto, podemos representar objetos utilizando tres tipos básicos de geometría: **punto, línea y polígono**. Un punto se puede representar en una superficie mediante dos atributos espaciales, X e Y, que son sus coordenadas. Una recta es una sucesión de puntos y un polígono es una sucesión de rectas que no se cortan y cierran en un punto de partida dado. En _R_, es posible combinar en un mismo objeto varias geometrías como puntos, líneas y polígonos, lo que no ocurre en GIS.
 
-As geometrias mencionadas são representados num espacio bidimensional. Podemos incluir uma terceira e ou uma quarta dimensão, incluindo atributos como altitudes ou tempo por exemplo (dimensões Z ou M respectivamente). Assim sendo podemos representar o crescimento de uma árvore ao longo da sua vida usando as variáveis X e Y para dar a localização espacial, Z para registrar o crescimento em altura e M para estabelecer a data de cada medição.
+Las geometrías mencionadas se representan en un espacio bidimensional. Podemos incluir una tercera y/o una cuarta dimensión, incluyendo atributos como altitudes o tiempo por ejemplo (dimensiones Z o M respectivamente). Así, podemos representar el crecimiento de un árbol a lo largo de su vida utilizando las variables X e Y para dar la ubicación espacial, Z para registrar el crecimiento en altura y M para establecer la fecha de cada medición.
 
-Em resumo um **objeto pode ser representado espacialmente** por um conjunto de coordenadas com as seguintes caracteristicas:
+En resumen, un **objeto puede ser representado espacialmente** por un conjunto de coordenadas con las siguientes características:
 
-  - X, Y  - localização espacial (bidimensional)
+  - X, Y  - localización espacial (bidimensional)
   
-  - X, Y, Z  - localização espacial + altura ou altitude (tridimensional)
+  - X, Y, Z  - localización espacial + altura o altitude (tridimensional)
   
-  - X, Y, M  - localização espacial + outra variavel medida (tridimensional)
+  - X, Y, M  - localización espacial + otra variable medida (tridimensional)
   
   
-  - X, Y, Z, M - localização espacial + altura ou altitude + outra variavel medida (quadridimensional)
+  - X, Y, Z, M - localización espacial + altura o altitud + otra variable medida (quatridimensional)
 
 ---
 
-No pacote `sf`, os principais tipos de representação da geometria de feiçoes simples  são:
+En el paquete `sf`, los principales tipos de representación geométrica de características simples son:
  
-  1- _**POINT**_ : geometria com dimensão zero contendo um único ponto, representado numa superfície por um par de coordenadas;
+  1- _**POINT**_ : geometría de dimensión cero que contiene un solo punto, representada en una superficie por un par de coordenadas;
   
-  2- _**LINESTRING**_: geometria unidimensional composta de uma sequencia de pontos (_**POINT**_), conectados por linhas que não se intersectam;
+  2- _**LINESTRING**_: geometría unidimensional compuesta por una secuencia de puntos (_**POINT**_), conectados por líneas que no se cortan;
   
-  3- _**POLYGON**_: geometria bidimensional com uma area positiva, formada por uma sequência de anéis de pontos fechados e não intersectados. O primeiro anel será o polígono exterior e os seguintes delimitan espaços vazios interiores, se eles existirem;
+  3- _**POLÍGONO**_: geometría bidimensional de área positiva, formada por una secuencia de anillos de puntos cerrados y no intersecados. El primer anillo será el polígono exterior y los siguientes delimitarán los vacíos interiores, si los hubiere;
   
-  4- _**MULTIPOINT**_: conjunto de pontos, chamado de simples se não tem 2 pontos iguais. Cada ponto possui seu par de coordenadas;
+  4- _**MULTIPUNTO**_: conjunto de puntos, llamado simple si no hay 2 puntos iguales. Cada punto tiene su par de coordenadas;
   
   5- _**MULTISTRING**_: conjunto de _**LINESTRING**_ ;
   
   6- _**MULTIPOLYGON**_: conjunto de _**POLYGON**_;
   
-  7- _**GEOMETRYCOLLECTION**_: conjunto de geometrias de qualquer tipo das anteriores mencionadas.
-
-Existem mais 10 geometrias especiais que não serão tratadas neste momento e que podem ser consultadas na documentação do pacote `sf`. 
-
-O armazenamento das feições se efetua da seguinte maneira:
-
-  + o **objeto `sf`**, classe 3, possui as seguintes propriedades: 
+  7- _**GEOMETRYCOLLECTION**_: conjunto de geometrías de cualquier tipo mencionado anteriormente.
   
-    1- um tipo geometria (alguma das mencionads anteriormente), 
+Hay 10 geometrías especiales más que no serán tratadas en este momento y que se pueden consultar en la documentación del paquete `sf`.
+
+El almacenamiento de objetos se realiza de la siguiente manera:
+
+  + el **objeto `sf`**, clase 3, tiene las siguientes propiedades:
+  
+    1- un tipo de geometría (algunas de las mencionadas anteriormente),
     
-    2- um tamanho (quantidade de feições e atributos), 
+    2- un tamaño (número de características y atributos),
     
-    3- uma extensão espacial ( _bounding box_ ou _bbox_), e um 
+    3- una extensión espacial ( _bounding box_ o _bbox_), y una
     
-    4- _CRS_ (que pode ser desconhecido, ou seja  _NA_).
+    4- _CRS_ (que puede ser desconocido, es decir, _NA_).
 
-  + os atributos das feições são armazenados num objeto de tipo `dataframe`, denominado de classe`sf`, que contém obrigatoriamente as seguintes duas classes:
+  + los atributos de las características se almacenan en un objeto de tipo `dataframe`, llamado clase `sf`, que debe contener las siguientes dos clases:
   
-    1- objeto da classe `sfc`. Devido a que a geometria pode ter diversos valores, ela é armazenada numa única coluna contendo objetos tipo `list`. Essa coluna tem o mesmo tamanho do numero de registros (linhas) no `dataframe`;
+   1- objeto de la clase `sfc`. Debido a que la geometría puede tener múltiples valores, se almacena en una sola columna que contiene objetos de tipo "lista". Esta columna tiene el mismo tamaño que el número de registros (filas) en el `marco de datos`;
   
-    2- Objeto da classe `sfg`. A geometria de cada feição e armazenada num objeto `list`, contido dentro do objeto `sfc`.
+    2- Objeto de la clase `sfg`. La geometría de cada función se almacena en un objeto `lista`, contenido dentro del objeto `sfc`.
   
-A seguinte figura mostra como esta organizado um objeto desta classe `sf`. No cabeçãlho se indica a quantidade de feições e atributos, o tipo e dimensão da geometria, a extensão espacial e o CRS. Em amarelo destáca-se o dataframe (classe `sf`), em verde a geometria (numa coluna de tipo lista, classe `sfc`) e em vermelho a geometria de uma feição (neste caso do 3o. registro, classe `sfg`). 
+La siguiente figura muestra cómo se organiza un objeto de esta clase `sf`. El encabezado indica el número de características y atributos, el tipo y tamaño de la geometría, la extensión espacial y el CRS. En amarillo, se resalta el marco de datos (clase `sf`), en verde la geometría (en una columna de tipo lista, clase `sfc`) y en rojo la geometría de una característica (en este caso, el tercer registro, clase `sfg` ).
 
-O objeto da figura é um arquivo multipolígono contendo 6 feições com três variáveis cada. Os 6 registros correspondem ao limites de alguns municípios de RJ e as três variáveis são: um identificador, o geocódigo do município e o nome do mesmo.
+El objeto figura es un archivo multipolígono que contiene 6 entidades con tres variables cada una. Los 6 registros corresponden a los límites de algunos municipios de RJ y las tres variables son: un identificador, el geocódigo del municipio y su nombre.
 
- Cada classe mencionada tem seus próprios metodos, para ver a lista completa deles, execute `methods(class = "sf")`. Experimente ver os métodos das outras duas classes, `sfc` e `sfg`.
-
+ Cada clase mencionada tiene sus propios métodos, para ver la lista completa de ellos, ejecute `methods(class="sf")`. Explore los métodos de las otras dos clases, `sfc` y `sfg`.
  
  </div>
   
@@ -214,31 +213,31 @@ O objeto da figura é um arquivo multipolígono contendo 6 feições com três v
 
 <div style="text-align:justify" markdown="1">
 
-#### c- Dados matriciais ou _raster_
+#### c- Datos matriciales o _raster_
 
-Um arquivo ou dado _raster_ é uma estrutura de dados que divide o espaco em porções retangulares iguais chamadas células ou _pixels_, as quais podem armazenar um ou mais valores em cada célula. Essa estrutura é também conhecida como **grade** ou **quadricula**, em contraposição aos dados de tipo vetorial já vistos.
+Un archivo _raster_ es una estructura de datos que divide el espacio en porciones rectangulares iguales llamadas celdas o _pixels_, las cuales pueden almacenar uno o más valores en cada celda. Esta estructura también se conoce como **grid** o **cuadrícula**, a diferencia de los datos de tipo vectorial ya vistos.
 
-O pacote `raster` tem funções para ler, manipular e gravar dados matricias em forma muito eficiente, já que não precisa carregar os dados em memoria para executar as operacoes mencionadas. Isto se torna relevante já que normalmente os dados raster são de grande volume. Os objetos criados com esse pacote são da classe S-4.
+El paquete `raster` tiene funciones para leer, manipular y grabar datos raster de una manera muy eficiente, ya que no necesita cargar los datos en memoria para realizar las operaciones mencionadas. Esto se vuelve relevante ya que normalmente los datos raster son de gran volumen. Los objetos creados con este paquete son de clase S-4.
 
-O pacote `raster`permite importar tem 3 tipos de objetos. Básicamente todos eles armazenam os seguintes atrubutos ou _slots_:
+El paquete `raster` te permite importar 3 tipos de objetos. Básicamente todos ellos almacenan los siguientes atributos o _slots_:
 
-    - o número de colunas e linhas, 
+    - el número de columnas y filas,
     
-    - as coordenadas da extensão espacial (um objeto da classe "extent") e 
+    - las coordenadas de la extensión espacial (un objeto de la clase "extensión") y
     
-    - o SGR (objeto da classe "proj.4" além do código EPSG, se disponível). 
+    - el SGR (objeto de clase "proj.4" además del código EPSG, si está disponible).
 
-O _raster_ também pode armazenar o(s) valor(es) específicos de cada célula e variável (camada). **Importante: As coordenadas estão referidas aos extremos da grade (esquinas) e não ao centro de cada célula como o fazem alguns software de SIG.**
+El _raster_ también puede almacenar los valores específicos de cada celda y variable (capa). **Importante: Las coordenadas se refieren a los extremos de la cuadrícula (esquinas) y no al centro de cada celda como lo hacen algunos software GIS.**
 
-Os três tipos de objetos raster são: 
+Los tres tipos de objetos raster son:
 
-  + `RasterLayer`, representa um camada única de dados. Um exemplo pode ser um modelo digital de elevações (MDE) ou a superfície de temperaturas produzidas por uma rede de estações metereológicas;
+  + `RasterLayer`, representa una sola capa de datos. Un ejemplo podría ser un modelo de elevación digital (DEM) o temperaturas superficiales producidas por una red de estaciones meteorológicas;
   
-  + `RasterBrick`, usado para representação de mais de uma variável ou camada ( _multi-layer_), mas que pertencem a um único arquivo. Um típico exemplo é uma imagem de satélite multiespectral; e 
+  + `RasterBrick`, utilizado para representar más de una variable o capa (_multicapa_), pero pertenecientes a un único archivo. Un ejemplo típico es una imagen de satélite multiespectral; Es
   
-  + `RasterStack`, para representação de mais de uma variável, as quais podem pertencer a diferentes arquivos ou a uma combinação de algumas camadas de um arquivo único. É obligatório que os limites espaciais e a resolução de todas as camadas sejam as mesmas.
+  + `RasterStack`, para la representación de más de una variable, que pueden pertenecer a diferentes archivos oa una combinación de algunas capas de un solo archivo. Es obligatorio que los límites espaciales y la resolución de todas las capas sean iguales.
 
-A forma mais simples de criar um objeto _raster_ é através da leitura de um arquivo. O pacote permite ler os formatos mais comuns como GeoTIFF, ERDAS, ESRI, ENVI, etc, usado a biblioteca `rgdal`. Dependendo do tipo de arquivo que importamos serão usadas as funções `raster()`, `brick()` ou `stack()`.
+La forma más sencilla de crear un objeto _raster_ es leyendo un archivo. El paquete permite leer los formatos más comunes como GeoTIFF, ERDAS, ESRI, ENVI, etc, utilizando la biblioteca `rgdal`. Dependiendo del tipo de archivo que importemos, se utilizarán las funciones `raster()`, `brick()` o `stack()`.
 
 </div>
 
@@ -246,19 +245,19 @@ A forma mais simples de criar um objeto _raster_ é através da leitura de um ar
 
 <div style="text-align:justify" markdown="1">
 
-### 3- Sistema Geodésico de Referência – SGR ( _CRS_)
+### 3- Sistema Geodésico de Referencia – SGR ( _CRS_)
 
-Quando falamos em dados georreferenciados ou espaciais, estamos dizendo que eles tem um atributo que os relaciona com a superfície terrestre, esse atributo é a geometria como foi definida no título anterior. A relação com a superfície terrestre é estabelecida por meio de coordenadas, que pertencem a um **Sistema Geodésico de Referência – SGR**. No _R_, o SGR é chamado de **_Coordinate Reference System – CRS_**. 
+Cuando hablamos de datos georreferenciados o espaciales, estamos diciendo que tienen un atributo que los relaciona con la superficie terrestre, este atributo es la geometría tal como se define en el título anterior. La relación con la superficie terrestre se establece por medio de coordenadas, las cuales pertenecen a un **Sistema de Referencia Geodésico – SGR**. En _R_, el SGR se denomina **_Sistema de Referencia de Coordenadas – CRS_**.
 
-Os elementos integrantes de um _CRS_ são: um **modelo da Terra**, um **sistema de coordenadas** e um **ponto terrestre de origem**, no qual se posiciona a origem do nosso sistema de coordenadas. 
+Los elementos que componen un _SRC_ son: un **modelo de la Tierra**, un **sistema de coordenadas** y un **punto de origen del terreno**, donde se posiciona el origen de nuestro sistema de coordenadas.
 
-Referente ao **modelo da Terra**, são usados principalmente dois modelos: o **esférico** e o **elipsoidico**. Este último tem uma maior aproximação à forma real da Terra, já que se definem dois eixos do elipsoide de diferentes tamanhos, e assim é possível modelar o achatamento existente nos polos (o raio polar é aproximadamente 11,5 km menor que o equatorial). Em algumas aplicações cartográficas não existe diferença em usar qualquer um desses modelos.
+En cuanto al **modelo de la Tierra**, se utilizan principalmente dos modelos: el **esférico** y el **elipsoide**. Este último tiene una aproximación más cercana a la forma real de la Tierra, ya que se definen dos ejes del elipsoide de diferentes tamaños, y así es posible modelar el achatamiento existente en los polos (el radio polar es aproximadamente 11,5 km más pequeño que el ecuatorial). En algunas aplicaciones cartográficas no hay diferencia en el uso de cualquiera de estos modelos.
 
-Os **sistemas de coordenadas** podem ser do tipo **geográfico** (definidos por latitude e longitude) ou **projetado** (eixos Leste e Norte, ou X e Y). A escolha determina como os eixos do modelo terrestre são divididos e as unidades de medida. Enquanto as unidades dos sistemas geográficos são angulares e medidas em graus, as dos sistemas projetados são lineares e medidas em metros (m).
+Los **sistemas de coordenadas** pueden ser de tipo **geográfico** (definidos por latitud y longitud) o **proyectados** (ejes Este y Norte, o ejes X e Y). La elección determina cómo se dividen los ejes del modelo de la Tierra y las unidades de medida. Mientras que las unidades de los sistemas geográficos son angulares y se miden en grados, las de los sistemas proyectados son lineales y se miden en metros (m).
 
-**Ponto terrestre de origem**, esse ponto determina a origem da escala de nossos eixos de coordenadas. Anteriormente era definido na superfície terrestre por meio de medições astronômicas (sistema local). Nos dias de hoje, os sistemas de referência tem sua origem no geocentro, definido usando técnicas de posicionamento por satélites (sistemas globais).
+**Punto de origen terrestre**, este punto determina el origen de escala de nuestros ejes de coordenadas. Anteriormente se definía en la superficie terrestre mediante medidas astronómicas (sistema local). Actualmente, los sistemas de referencia tienen su origen en el geocentro, definido mediante técnicas de posicionamiento satelital (sistemas globales).
 
-Os elementos definitórios mencionados: **modelo terrestre, ponto terrestre de origem e , sistema de coordenadas**, caraterizam cada SGR. Em particular a escolha dos elementos: modelo terrrestre e o ponto terrestre de origem denomina-se de _Datum_. O _Datum_ SIRGAS2000, por exemplo, tem o elipsóide GRS80 como modelo terrestre e o geocentro terreste como ponto inicial. Nesse _Datum_ podemos escolher trabalhar com sistemas de coordenadas geográficas ou um sistema de coordenadas projetadas, como por exemplo o _Universal Transverse Mercator - UTM_ para a localização das feições.
+Los elementos definitorios mencionados: **modelo de la tierra, punto de origen terrestre y sistema de coordenadas**, caracterizan cada SGR. En particular, la elección de los elementos: modelo terrestre y punto de origen terrestre se denomina _Datum_. _Datum_ SIRGAS2000, por ejemplo, tiene como modelo terrestre el elipsoide GRS80 y como punto de partida el geocentro terrestre. En este _Datum_ podemos optar por trabajar con sistemas de coordenadas geográficas o un sistema de coordenadas proyectadas, como el _Universal Transverse Mercator - UTM_ para la ubicación de las características.
 
 <div/>
 
@@ -268,9 +267,9 @@ Os elementos definitórios mencionados: **modelo terrestre, ponto terrestre de o
 
 <div style="text-align:justify" markdown="1">
 
-#### a- _CRS_ não projetado ou de coordenadas geográficas
+#### a- _CRS_ no proyectado o de coordenadas geográficas
 
-Na definição do sistema, vimos que são escolhidos um elipsoide determinado (SIRGAS, WGS84, Internacional, etc.), um ponto de origem (modernamente o geocentro) e um sistema de coordenadas. Em relação as coordenadas do tipo geográficas, usa-se a **latitude** e a **longitude** para a localização espacial dos objetos. A **latitude** é a distância angular a partir do paralelo 0º, ou Equador, contada no sentido Polo Sul (latitude -90º) ou no sentido Polo Norte (latitude +90º). A **longitude** é a distância angular a partir do meridiano 0º, ou de Greenwich, contada no sentido leste (longitudes de 0º a 360) ou no sentido leste e oeste (longitudes de 0º a +180º e de 0º a -180º, respectivamente). Estas unidades de medida estão em graus sexagesimais. Na figura um sistema de coordenadas geográficas mostrando a localização de um ponto de coordenadas com longitude e latitude de -40 graus (Fonte: IBGE).
+Al definir el sistema, vimos que se elige un elipsoide específico (SIRGAS, WGS84, Internacional, etc.), un punto de origen (actualmente el geocentro) y un sistema de coordenadas. En cuanto a las coordenadas geográficas, **latitud** y **longitud** se utilizan para la ubicación espacial de los objetos. La **latitud** es la distancia angular desde el paralelo 0º, o Ecuador, contada hacia el Polo Sur (latitud -90º) o hacia el Polo Norte (latitud +90º). La **longitud** es la distancia angular desde el meridiano 0º, o meridiano de Greenwich, contada hacia el este (longitudes de 0º a 360º) o hacia el este y el oeste (longitudes de 0º a +180º y de 0º a -180º, respectivamente). Estas unidades de medida están en grados sexagesimales. En la figura, un sistema de coordenadas geográficas que muestra la ubicación de un punto de coordenadas con longitud y latitud de -40 grados (Fuente: IBGE).
 
 <div/>
 
@@ -283,13 +282,13 @@ Na definição do sistema, vimos que são escolhidos um elipsoide determinado (S
 
 ---
 
-#### b- _CRS_ de coordenadas projetadas
+#### b- _CRS_ de coordenadas proyectadas
 
-Os sistemas de referência com coordenadas planas ou projetadas supõem a projeção das coordenadas geográficas sobre uma superfície plana e o uso de eixos cartesianos X e Y, com escala métrica e origem determinada. Todos os sistemas projetados provem de algum sistema geográfico existente.
+Los sistemas de referencia con coordenadas planas o proyectadas suponen la proyección de coordenadas geográficas sobre una superficie plana y el uso de ejes cartesianos X e Y, con una escala métrica y un origen determinado. Todos los sistemas diseñados provienen de algún sistema geográfico existente.
 
-Para passar de um sistema de coordenadas geográficas para um de coordenadas projetadas, precisamos de uma superfície que tenha a possibilidade de se desenvolver no plano. Assim, temos projeções que usam superfícies cônicas, cilíndricas, ou planas. Para regiões localizadas em latitudes médias as superfícies cônicas com um ou dois meridianos de contato são as mais adequadas, enquanto para a cartografia global as projeções cilíndricas são melhores. Já nos polos, podemos usar uma superfície plana, tangente no próprio polo.
+Para pasar de un sistema de coordenadas geográficas a un sistema de coordenadas proyectadas, necesitamos una superficie que tenga la posibilidad de desarrollarse en el plano. Así, tenemos proyecciones que utilizan superficies cónicas, cilíndricas o planas. Para regiones ubicadas en latitudes medias, las superficies cónicas con uno o dos meridianos de contacto son las más adecuadas, mientras que para la cartografía global, las proyecciones cilíndricas son las mejores. En cuanto a los polos, podemos utilizar una superficie plana, tangente al propio polo.
 
-Os sistemas projetados tentam minimizar a deformação produzida na transformação. Desta forma, alguns preservam determinada geometria, como a área, a direção, as distâncias ou a própria forma dos objetos em detrimento dos outros.  **Não existe projeção que esteja livre de deformações, seja em direção, área ou forma das feições!** Na seguinte figura (Fonte: IBGE) se apresentam alguns dos sistemas de projeção mais usados.
+Los sistemas diseñados tratan de minimizar la deformación producida en la transformación. De esta forma, algunos conservan cierta geometría, como el área, la dirección, las distancias o la forma misma de los objetos en detrimento de otros. **¡No hay proyección que esté libre de deformaciones, ya sea en dirección, área o forma de las características!** La siguiente figura (Fuente: IBGE) muestra algunos de los sistemas de proyección mas utilizados.
 
 
 <div style="text-align:center" markdown="1">
@@ -302,20 +301,19 @@ Os sistemas projetados tentam minimizar a deformação produzida na transformaç
 
 <div style="text-align:justify" markdown="1">
 
-A biblioteca **_GDAL (Geospatial Data Abstraction Library)_** é uma biblioteca de licença aberta de software de computação para leitura e escrita de dados geoespaciais, seguindo a norma ISO mencionada na introdução.
+La biblioteca **_GDAL (Geospatial Data Abstraction Library)_** es una biblioteca de licencia abierta de software informático para leer y escribir datos geoespaciales, siguiendo el estándar ISO mencionado en la introducción.
 
-A descripção de um _CRS_ geográfico se da através de um texto em formato `proj4string`, que define os parâmetros de cada sistema e é usada pela biblioteca `PROJ.4`.
+La descripción de un _CRS_ geográfico se da a través de un texto en formato `proj4string`, que define los parámetros de cada sistema y es utilizado por la librería `PROJ.4`.
 
-Os sistemas de referência geodésicos projetados, são definidos através das especificações contidas no documento **_EPSG Geodetic Parameter dataset_** da **_International Association of Oil & Gas Producers - IOGP_** . Ambas bibliotecas estão implementadas no _R_ através da biblioteca `rgdal`. 
+Los sistemas geodésicos de referencia proyectados se definen a través de las especificaciones contenidas en el documento **_EPSG Geodetic Parameter dataset_** de la **_International Association of Oil & Gas Producers - IOGP_**. Ambas bibliotecas se implementan en _R_ a través de la biblioteca `rgdal`.
 
-Nos arquivos vetoriais tipo camada ou _shape_ existem vários arquivos que definem a geometria e caraterísticas dos dados. Especificamente o arquivo `.prj` de cada `shape` contém as especificações do _CRS_. No _R_, existem diversas formas de definir um SGR, pode ser através de seu número EPSG, no formato `proj.4` ou no formato _Well Known Text - WKT_. Os seguintes exemplos estão no formato _WKT_, sendo que a letra em negrita mostra os argumentos de definição:
-
+En los archivos vectoriales de capa o _shape_ existen varios archivos que definen la geometría y características de los datos. Específicamente, el archivo `.prj` de cada `shape` contiene las especificaciones _CRS_. En _R_ hay varias formas de definir un SGR, puede ser a través de su número EPSG, en el formato `proj.4` o en el formato _Well Known Text - WKT_. Los siguientes ejemplos están en formato _WKT_, con la letra en negrita que muestra los argumentos de definición:
 <div/>
 
 ---
 
 
-##### _CRS_ não projetado ou de coordenadas geográficas
+##### _CRS_ no proyectado o de coordenadas geográficas
 
 
 **GEOGCS**["SIRGAS 2000",
@@ -331,7 +329,7 @@ Nos arquivos vetoriais tipo camada ou _shape_ existem vários arquivos que defin
 ---
 
 
-##### _CRS_ com coordenadas projetadas
+##### _CRS_ con coordenadas projetadas
 
 
 **PROJCS**["SIRGAS_2000_UTM_zone_24S", 
@@ -362,9 +360,9 @@ Nos arquivos vetoriais tipo camada ou _shape_ existem vários arquivos que defin
 
 <div style="text-align:justify" markdown="1">
 
-Para dados tipo raster, a mesma informação pode estar em arquivo separado ou incluído no cabeçalho do próprio arquivo, junto com os dados.
+Para los datos raster, la misma información puede estar en un archivo separado o incluirse en el encabezado del propio archivo, junto con los datos.
 
-As seguintes tabelas resumem os principais SGR, com coordenadas geográficas e projetadas, que podemos encontrar no Brasil.
+Las siguientes tablas resumen las principales SGR, con coordenadas geográficas y proyectadas, que podemos encontrar en Uruguay y Brasil.
 
 <div/>
 
@@ -376,7 +374,7 @@ As seguintes tabelas resumem os principais SGR, com coordenadas geográficas e p
 
 ```{r tabela01, echo=FALSE}
 CRS_geo <- tibble::tribble(
-             ~Nome, ~"código EPSG", ~"Definição formato Proj.4",  ~Observações,
+             ~Nombre, ~"código EPSG", ~"Definición formato Proj.4",  ~Observaciones,
   "Córrego Alegre",    4225, "“+proj=longlat +ellps=intl +towgs84=-206,172,-6,0,0,0,0 +no_defs”",    "Obsoleto",
            "SAD69",    4291,  "“+proj=longlat +ellps=GRS67 +towgs84=-57,1,-41,0,0,0,0 +no_defs”",    "Obsoleto",
            "WGS84",    4326,                             "“+proj=longlat +datum=WGS84 +no_defs”", "Não oficial",
@@ -394,24 +392,16 @@ kable_styling(
 
 ---
 
-#### Sistemas Geodésicos de Referência, _Datum_ SIRGAS2000 - coordenadas projetadas em sistema UTM
+#### Sistemas Geodésicos de Referencia, _Datum_ SIRGAS2000 - coordenadas proyectadas en sistema UTM
 
 ---
 
 ```{r tabela02, echo=FALSE}
 CRS_UTM <- tibble::tribble(
-      ~Nome, ~"código EPSG", ~"Definição formato Proj.4",    ~Observações,
-  "UTM-18S",   31978, "“+proj=utm +zone=18 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 18 Sul",
-  "UTM-19S",   31979, "“+proj=utm +zone=19 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 19 Sul",
-  "UTM-20S",   31980, "“+proj=utm +zone=20 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 20 Sul",
-  "UTM-21S",   31981, "“+proj=utm +zone=21 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 21 Sul",
-  "UTM-22S",   31982, "“+proj=utm +zone=22 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 22 Sul",
-  "UTM-23S",   31983, "“+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 23 Sul",
-  "UTM-24S",   31984, "“+proj=utm +zone=24 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 24 Sul",
-  "UTM-25S",   31985, "“+proj=utm +zone=25 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 25 Sul",
-  "UTM-19N",   31973,        "“+proj=utm +zone=19 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”", "Fuso 19 Norte",
-  "UTM-20N",   31974,        "“+proj=utm +zone=20 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”", "Fuso 20 Norte",
-  "UTM-21N",   31975,        "“+proj=utm +zone=21 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”", "Fuso 21 Norte"
+      ~Nombre, ~"código EPSG", ~"Definición formato Proj.4",    ~Observaciones,
+  "UTM-23S",   31983, "“+proj=utm +zone=23 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 23 Sur",
+  "UTM-24S",   31984, "“+proj=utm +zone=24 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 24 Sur",
+  "UTM-25S",   31985, "“+proj=utm +zone=25 +south +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs”",   "Fuso 25 Sur",
   )
 
 require(knitr)
@@ -427,27 +417,26 @@ kable_styling(
 
 <div style="text-align:justify" markdown="1">
 
-Se precisar de um _CRS_ diferente o de outro pais, podemos consultar o site do [EPSG](epsg.io) e escolher aquele desejado. Ainda temos a possibilidade de exportar o _CRS_ em formato **WKT** ou **Proj.4**. Porém existe a possibilidade de um sistema de coordenadas projetadas não ter código EPSG, no caso de sistemas criados localmente e não globais.
-
+Si necesitamos un _CRS_ de otro país, podemos consultar la web [EPSG](epsg.io) y elegir el que queremos. Todavía tenemos la posibilidad de exportar el _CRS_ en formato **WKT** o **Proj.4**. Sin embargo, existe la posibilidad de que un sistema de coordenadas proyectadas no tenga un código EPSG, es el caso de sistemas creados localmente y no globalmente
 <div/>
 
 #### Exercicio 01
 
-Temos dados antigos do Mocambique em coordenadas projetadas e datum Tete. Procure na pagina do EPSG o CRS correspondente e responda as seguintes perguntas:
+Disponemos de datos antiguos de Mozambique en coordenadas proyectadas y datum Tete. Busque en la página de la EPSG el CRS correspondiente y responda las siguientes preguntas:
 
-    - qual a unidade de medida?
+    - ¿Cuál es la unidad de medida?
   
-    - qual o elipsoide usado?
+    - ¿Qué elipsoide usó?
   
-    - qual a autoridade responsavel pelo _CRS_?
+    - ¿Qué autoridad es responsable del SGR?
   
-Exporte o CRS em formato **WTK** e **Proj.4**.
+Exporte el CRS en formato **WTK** y **Proj.4**.
 
 \
 ---
 \
 
-FIM primeira parte
+FIN primera parte
 
 ---
 
