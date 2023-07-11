@@ -1,0 +1,60 @@
+---
+title: "Terra"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-07-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Paqute de funciones terra {terra} 
+
+### 1- Introdução
+
+R Documentación 
+
+Descripción de los métodos en el paquete terra 
+
+Este nuevo paquete de funciones R, viene a substituir los paquetes `sf` y `raster`. En particular `raster` (1), lanzado en 2017, permite manejar facilmente datos de naturaleza contínua (como variables del clima o altitudes), a través de la división del espacio en cuadrículas. Una de las fuentes mas recientes y promisoras de este tipo son las imágenes y datos satelitales, que cubren una variedad amplia de variables de diferentes tipos.
+
+En 2018 fue lanzado a su vez el paquete `sf` (2), que permitió tratar de los datos de tipo vectorial, como rutas, casas, puentes, áreas del terreno, etc y que se representan digitalmente como puntos, lineas, polígonos.
+
+De esta forma, `terra` junta en un paquete solo los dos anteriores, agregando algunas funcionalidades extras, lo que lo hace particularmente útil para quien trabaja en _R_ con análisis y tratamento de datos espaciales georreferenciados.
+
+
+
+
+proporciona métodos para manipular datos geográficos (espaciales) en forma de "raster" y "vector". División de datos ráster
+espacio en celdas de cuadrícula rectangulares y se usan comúnmente para representar fenómenos espacialmente continuos,
+como la elevación o el clima. Las imágenes de satélite también tienen esta estructura de datos y, en ese contexto, las celdas de cuadrícula
+a menudo se denominan píxeles. Por el contrario, los datos espaciales "vectoriales" (puntos, líneas, polígonos) suelen utilizarse
+para representar entidades espaciales discretas, como una carretera, un país o una parada de autobús.
+El paquete implementa dos clases principales (tipos de datos): SpatRaster y SpatVector. Compatibilidad con SpatRaster
+manejar archivos de trama grandes que no se pueden cargar en la memoria; operaciones raster locales, focales, zonales y globales;
+conversión de polígonos, líneas y puntos a ráster; integración con métodos de modelado para hacer predicciones espaciales;
+y más. SpatVector admite todo tipo de operaciones geométricas, como las intersecciones.
+Las clases adicionales incluyen SpatExtent, que se utiliza para definir una extensión espacial (cuadro delimitador); SpatRaster-
+Conjunto de datos, que representa una colección de subconjuntos de datos para la misma área. Cada subconjunto de datos es un SpatRaster
+con posiblemente muchas capas, y puede, por ejemplo, representar diferentes variables climáticas; y SpatRasterCollection
+y SpatVectorCollection que son equivalentes a listas de objetos SpatRaster o SpatVector. Hay
+también una clase SpatGraticule para ayudar a agregar líneas y etiquetas de longitud/latitud a un mapa con otro
+sistema de referencia de coordenadas.
+Estas clases contienen un puntero de C++ a la "clase de referencia" de datos y eso crea algunas limitaciones. Ellos no pueden
+recuperarse de una sesión de R guardada o pasarse directamente a los nodos en un clúster de computadoras. Generalmente,
+debe usar writeRaster para guardar objetos SpatRaster en el disco (y pasar un nombre de archivo o valores de celda al clúster
+nodos). Véase también envoltura.
+El paquete terra se concibe como un reemplazo del paquete raster. terra tiene un muy similar, pero más simple,
+interfaz, y es más rápido que raster. En la parte inferior de esta página hay una tabla que muestra las diferencias en
+los métodos entre los dos paquetes.
+A continuación se muestra una lista de algunos de los métodos más importantes agrupados por tema
+
+
+
+  +  Robert J. Hijmans (2017). raster: Geographic Data Analysis and Modeling. R package version 2.6-7. https://CRAN.R-project.org/package=raster
+  
+   +  Edzer Pebesma (2018). sf: Simple Features for R. R package version 0.6-3.
+  https://CRAN.R-project.org/package=sf
