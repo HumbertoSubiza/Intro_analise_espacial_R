@@ -1,5 +1,6 @@
 ---
 title: "Terra"
+author: "Walter Humberto Subiza Piña"
 output:
   html_document: default
   pdf_document: default
@@ -11,13 +12,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-Paqute de funciones terra {terra} 
+Paqute de funciones `terra`
 
 ### 1- Introdução
 
 R Documentación 
 
-Este nuevo paquete de funciones R, viene a substituir los paquetes `sf` y `raster`. En particular `raster` (1), lanzado en 2017, permite manejar facilmente datos de naturaleza contínua (como variables del clima o altitudes), a través de la división del espacio en cuadrículas. Una de las fuentes mas recientes y promisoras de este tipo son las imágenes y datos satelitales, que cubren una gran variedad de variables de diferentes tipos.
+Este nuevo paquete de funciones _R_, viene a substituir los paquetes `raster`y `sf`. En particular `raster` (1), lanzado en 2017, permite manejar facilmente datos de naturaleza contínua (como variables del clima o altitudes), a través de la división del espacio en cuadrículas. Una de las fuentes mas recientes y promisoras en esta categoria son las imágenes y datos satelitales, que cubren una gran variedad de variables de diferentes tipos.
 
 En 2018 fue lanzado a su vez el paquete `sf` (2), que permitió tratar de los datos de tipo vectorial, como rutas, casas, puentes, áreas del terreno, etc y que se representan digitalmente como puntos, lineas, polígonos.
 
@@ -27,9 +28,9 @@ De esta forma, `terra` junta en un paquete solo los dos anteriores, agregando al
 
 El paquete implementa dos tipos de clases de datos: **SpatRaster** y **SpatVector**. 
 
-La primera clase, que maneja datos de tipo contínuo tiene la ventaja, para grandes archivos, de no precisar de cargarlos totalmente en la memoria. Asimismo se pueden hacer diversos tipos de operaciones sobre los datos, sean locales o globales, permitiendo la conversión de datos vectoriales en raster, modelado para predicción, entre otros.
+La primera clase, que maneja datos de tipo contínuo tiene la ventaja de no precisar de cargarlos totalmente en la memoria, cuando los archivos son de gran tamaño. Asimismo se pueden hacer diversos tipos de operaciones sobre los datos, sean locales o globales, permitiendo la conversión de datos vectoriales en raster, modelado para predicción, entre otros.
 
-Ya la clase **SpatVector** realiza todas las operaciones geométricas que un sistema de informaciones geográficas permite.
+Ya la clase **SpatVector** realiza todas las operaciones geométricas que un sistema de informaciones geográficas permite con datos vectoriales.
 
 \
 
@@ -42,14 +43,13 @@ Como complemento de estas clases principales, son creadas clases adicionales, co
   
   . **SpatRasterCollection** y **SpatVectorCollection**, que son listas de objetos de las clases mencionadas;
   
-  . **SpatGraticule**, para agregar lineas líneas y etiquetas de longitud/latitud a un mapa con otro
-sistema de referencia de coordenadas.
+  . **SpatGraticule**, para agregar lineas de longitud/latitud a un mapa con otro sistema de referencia de coordenadas y etiquetarlas.
 
 Existe una limitación para estas clases y es que deben ser guardadas en disco luego de creadas, ya que no es posible recuperarlas de una sesión _R_ anterior cerrada. Para evitar esta limitación se usa _writeRaster_ para guardar objetos **SpatRaster** en el disco 
 
 
-El paquete `terra` viene a substituir el paquete `raster`, siendo que es más simple y rápido que éste.
-A continuación se muestra una lista de algunos de los métodos o funciones más importantes agrupados por tema
+El paquete `terra` es más simple y rápido que los paquetes que substituye, reuniendo en un solo lugar todos los métodos necesários para realizar análisis espacial de datos georreferenciados.
+En los próximos documentos, iremos presentando por clase, los distintos métodos disponibles y colocando algunos ejemplos prácticos. La totalidad de las funcionalidades del paquete está bien documentada en la ajuda del mismo a través del documento _terra-package_.
 
 
 
