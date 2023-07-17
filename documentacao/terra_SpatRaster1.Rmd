@@ -1,0 +1,91 @@
+---
+title: "Terra_SpatRaster1"
+author: "Walter Humberto Subiza Piña"
+date: "2023-07-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo      = TRUE, 
+                      warning   = FALSE, 
+                      message   = FALSE, 
+                      fig.path  = paste0(getwd(), "/figuras/"), 
+                      fig.ext   = 'png',
+                      fig.align = 'center')
+```
+
+
+
+```{r libraries}
+library(terra)
+```
+
+
+### 1- Clase SpatRaster
+
+Direccionamiento para la pasta donde se encuentran los datos.
+
+
+```{r }
+dir <- ("C:/Users/Administrador/Documents/R/Intro_analise_espacial_R/exercicios/data")
+
+```
+
+
+Cargar un archivo tif de SRTM, agregamos a la dirección el nombre del archivo de datos y luego se carga con _rast_. A continuación generamos la imagen y vemos la clase del nuevo archivo.
+
+```{r}
+f1<- (paste(dir,"srtm_26_19.tif",sep = "/"))
+r1 <- rast(f1) 
+plot(r1)
+class(r1)
+```
+
+Para verificar la resolución espacial y la extensión de los datos cargados:
+
+```{r}
+res(r1)
+ext(r1)
+
+```
+Cargamos otro archivo semejante
+
+```{r }
+f2<- (paste(dir,"srtm_26_18.tif",sep = "/"))
+r2 <- rast(f2) 
+plot(r2)
+
+```
+
+
+Podemos unir los dos archivos, que tienen el mismo SGR y resolución, usando el método _merge_. A su vez podemos ver las estadísticas del archivo final con _summary_.
+
+```{r}
+x <-merge(r1,r2)
+plot(x)
+summary(x)
+```
+
+Los archivos cargados y unidos están en coordenadas geográficas, podemos proyectarlo para un sistema plano como UTM, de la siguiente forma:
+
+
+```{r}
+nuevo_crs <- "+proj=utm +zone=21 +south +datum=WGS84 +units=m +no_defs +type=crs"
+x_2<- project(x, nuevo_crs)
+terrain(x_2)
+#p <- cbind(401516.1, 6663563)
+#v <- viewshed(x, p, 1.8, 0, 0.85714)
+```
+
+
+```{r}
+crs(x_2)
+res(x_2)
+plot(x_2)
+summary(x_2)
+```
+```{r}
+#p <- cbind(401516.1, 6663563)
+#v <- viewshed(x_2, p, 1.8, 0, 0.85714)
+```
+
