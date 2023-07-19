@@ -26,33 +26,42 @@ library(terra)
 Direccionamiento para la pasta donde se encuentran los datos.
 
 
-```{r }
-dir <- ("C:/Users/Administrador/Documents/R/Intro_analise_espacial_R/exercicios/data")
+```{r camino}
+cam <- ("C:/Users/Administrador/Documents/R/Intro_analise_espacial_R/exercicios/data")
 
 ```
 
 
-Cargar un archivo tif de SRTM, agregamos a la dirección el nombre del archivo de datos y luego se carga con _rast_. A continuación generamos la imagen y vemos la clase del nuevo archivo.
+Cargar un archivo del tipo tif de la base de datos de SRTM, agregamos a la dirección el nombre del archivo de datos y luego se carga con _rast_. A continuación generamos la imagen y vemos la clase del nuevo archivo.
 
-```{r}
-f1<- (paste(dir,"srtm_26_19.tif",sep = "/"))
+```{r intro1}
+# camino + nombre del archivo 
+f1<- (paste(cam,"srtm_26_19.tif",sep = "/"))
+# cargar el archivo
 r1 <- rast(f1) 
+# imagen
 plot(r1)
+# clase
 class(r1)
 ```
 
-Para verificar la resolución espacial y la extensión de los datos cargados:
+Para verificar la extensión de los datos cargados y la resolución espacial:
 
-```{r}
-res(r1)
+```{r intro2}
 ext(r1)
-
+res(r1)
+# primeras cuatro lineas del objeto
+head(r1,4)
 ```
+
 Cargamos otro archivo semejante
 
-```{r }
-f2<- (paste(dir,"srtm_26_18.tif",sep = "/"))
+```{r intro3}
+# camino + nombre del archivo 
+f2<- (paste(cam,"srtm_26_18.tif",sep = "/"))
+# cargar el archivo
 r2 <- rast(f2) 
+# imagen
 plot(r2)
 
 ```
@@ -60,7 +69,8 @@ plot(r2)
 
 Podemos unir los dos archivos, que tienen el mismo SGR y resolución, usando el método _merge_. A su vez podemos ver las estadísticas del archivo final con _summary_.
 
-```{r}
+```{r intro4}
+# unión de los archivos
 x <-merge(r1,r2)
 plot(x)
 summary(x)
@@ -69,23 +79,55 @@ summary(x)
 Los archivos cargados y unidos están en coordenadas geográficas, podemos proyectarlo para un sistema plano como UTM, de la siguiente forma:
 
 
-```{r}
-nuevo_crs <- "+proj=utm +zone=21 +south +datum=WGS84 +units=m +no_defs +type=crs"
+```{r intro5}
+nuevo_crs <- "+proj=utm +zone=22 +south +datum=WGS84 +units=m +no_defs +type=crs"
 x_2<- project(x, nuevo_crs)
-terrain(x_2)
-#p <- cbind(401516.1, 6663563)
-#v <- viewshed(x, p, 1.8, 0, 0.85714)
 ```
 
 
 ```{r}
-crs(x_2)
+crs(x_2, proj=TRUE)
 res(x_2)
 plot(x_2)
 summary(x_2)
 ```
+
+
 ```{r}
-#p <- cbind(401516.1, 6663563)
-#v <- viewshed(x_2, p, 1.8, 0, 0.85714)
+# camino + nombre del archivo Landsat
+f3<- (paste(cam,"landsat.tif",sep = "/"))
+# cargar el archivo
+r3 <- rast(f3) 
+# imagen
+plot(r3)
+```
+
+
+
+```{r}
+res(r3)
+nlyr(r3)
+names(r3)
+plotRGB(r3, r=1, g=2, b=3, a=NULL, colNA="white",stretch="lin", smooth=TRUE, axes=TRUE)
+```
+
+```{r}
+# camino + nombre del archivo 
+f4<- (paste(cam,"sent_20230716.jp2",sep = "/"))
+# cargar el archivo
+r4 <- rast(f4) 
+# imagen
+plot(r4)
+```
+
+
+
+```{r}
+crs(r4, proj=TRUE)
+ext(r4)
+res(r4)
+nlyr(r4)
+names(r4)
+head(r4)
 ```
 
