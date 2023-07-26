@@ -16,14 +16,14 @@ knitr::opts_chunk$set(echo      = TRUE,
 
 
 
-```{r libraries}
+```{r biblio}
 library(terra)
 ```
 
 
 ### 1- Clase SpatRaster
 
-Direccionamiento para la pasta donde se encuentran los datos.
+Direccionamiento para la pasta donde se encuentran los datos a ser cargados.
 
 
 ```{r camino}
@@ -31,8 +31,18 @@ cam <- ("C:/Users/Administrador/Documents/R/Intro_analise_espacial_R/exercicios/
 
 ```
 
+\
 
-Cargar un archivo del tipo tif de la base de datos de SRTM, agregamos a la dirección el nombre del archivo de datos y luego se carga con _rast_. A continuación generamos la imagen y vemos la clase del nuevo archivo.
+El primer tópico a ser abordado es la creación de objetos raster. Un objeto raster representa uma superfície contínua que está georreferenciada y posee 3 dimensiones, lineas, columnas y camadas. Las lineas y columnas dividen el espacio en cuadrículas (o formas geométricas diferentes) y las diversas camadas representan valores de un determinado atributo en cada célula. Un ejemplo típico seria um modelo digital de terreno (MDT o DTM en inglés) en que cada célula (linea y columna) tiene asociada una determinada altitud. El tamaño de la célula se denomina resolución del MDT y representa un determinado espacio de terreno.
+
+Con _terra_ podemos crear estos objetos raster a partir de un archivo ya existente, a partir de otro objeto o a partir de cero, o sea sin contar con datos preexistentes.
+
+La forma mas rápida y común es a partir de un archivo ya existente, que puede ser un MDT o una imagen aérea o satelital.
+
+\
+
+A continuación vamos a cargar un archivo de altitudes del tipo tif, de la base de datos de SRTM <https://www2.jpl.nasa.gov/srtm/>, para eso agregamos al camino de los datos, el nombre del archivo y luego se carga con _rast_. A continuación generamos un gráfico del mismo, la escala de colores y los ejes son automáticamente escogidos.
+
 
 ```{r intro1}
 # camino + nombre del archivo 
@@ -41,26 +51,29 @@ f1<- (paste(cam,"srtm_26_19.tif",sep = "/"))
 r1 <- rast(f1) 
 # imagen
 plot(r1)
-# clase
-class(r1)
 ```
 
-Para verificar la extensión de los datos cargados y la resolución espacial:
+Para verificar el sistema geodésico de referencia (_CRS, Coordinate Reference System_), la extensión de los datos cargados, la resolución espacial y ver las 4 primeras lineas del archivo:
 
 ```{r intro2}
+# SGR
+crs(r1, proj=TRUE)
+# extensión
 ext(r1)
+# resolución en grados decimales, debido al SGR
 res(r1)
 # primeras cuatro lineas del objeto
 head(r1,4)
 ```
 
-Cargamos otro archivo semejante
+Verificamos que el SGR es WGS84, en coordenadas geográficas de latitud y longitud y la resolución en grados decimales es 0,0008333, que corresponde aproximadamente a 90 m. El archivo es del tipo dataframe.
+
+
+Cargamos otro archivo semejante, en este caso hacemos la carga directamente con el nombre del archivo.
 
 ```{r intro3}
-# camino + nombre del archivo 
-f2<- (paste(cam,"srtm_26_18.tif",sep = "/"))
 # cargar el archivo
-r2 <- rast(f2) 
+r2 <- rast(paste(cam,"srtm_26_18.tif",sep = "/")) 
 # imagen
 plot(r2)
 
@@ -71,29 +84,50 @@ Podemos unir los dos archivos, que tienen el mismo SGR y resolución, usando el 
 
 ```{r intro4}
 # unión de los archivos
-x <-merge(r1,r2)
-plot(x)
-summary(x)
+R <-merge(r1,r2)
+# estatísticas
+summary(R)
+# gráfico
+plot(R)
 ```
+
+
+```{r}
+d <- classify(R, c(-6,0,50,100,250,500, 1000, 1530))
+plot(d, type="classes")
+north(cbind(-54, -27))
+```
+
+
+
 
 Los archivos cargados y unidos están en coordenadas geográficas, podemos proyectarlo para un sistema plano como UTM, de la siguiente forma:
 
 
 ```{r intro5}
 nuevo_crs <- "+proj=utm +zone=22 +south +datum=WGS84 +units=m +no_defs +type=crs"
-x_2<- project(x, nuevo_crs)
+Rp <- project((R), nuevo_crs)
 ```
 
 
-```{r}
-crs(x_2, proj=TRUE)
-res(x_2)
-plot(x_2)
-summary(x_2)
+```{r intro6}
+# verificando el SGR
+crs(Rp, proj=TRUE)
+# resolución
+res(Rp)
+# estatísticas del archivo
+summary(Rp)
+# gráfico
+plot(Rp)
 ```
 
 
-```{r}
+\
+
+A continuación vamos cargar dos imagenes de satélite, una Landsat tipo _tif_, de tres bandas RGB y una Sentinel también con la combinación RGB, pero de formato _jp2_.
+
+
+```{r intro7}
 # camino + nombre del archivo Landsat
 f3<- (paste(cam,"landsat.tif",sep = "/"))
 # cargar el archivo
@@ -102,27 +136,31 @@ r3 <- rast(f3)
 plot(r3)
 ```
 
+En ester caso, el método _plot_ genera tres gráficos, correspondiendo a cada banda que contiene el archivo. Para poder crear un gráfico de la composición RGB se debe usar el método _plotRGB_ con algunas opciones.
 
 
-```{r}
+```{r intro8}
 res(r3)
 nlyr(r3)
 names(r3)
 plotRGB(r3, r=1, g=2, b=3, a=NULL, colNA="white",stretch="lin", smooth=TRUE, axes=TRUE)
 ```
 
-```{r}
-# camino + nombre del archivo 
-f4<- (paste(cam,"sent_20230716.jp2",sep = "/"))
+\
+
+El archivo Sentinel es cargado y el método _plot_ genera automáticamente la combinación de RGB correspondiente.
+
+
+```{r intro9}
 # cargar el archivo
-r4 <- rast(f4) 
+r4 <- rast((paste(cam,"sent_20230716.jp2",sep = "/"))) 
 # imagen
-plot(r4)
+plot(r4, axes=TRUE)
 ```
 
 
 
-```{r}
+```{r intro10}
 crs(r4, proj=TRUE)
 ext(r4)
 res(r4)
