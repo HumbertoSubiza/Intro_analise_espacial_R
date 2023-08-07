@@ -41,7 +41,7 @@ La forma mas rápida y común es a partir de un archivo ya existente, que puede 
 
 \
 
-A continuación vamos a cargar un archivo de altitudes del tipo tif, de la base de datos de SRTM <https://www2.jpl.nasa.gov/srtm/>, para eso agregamos al camino de los datos, el nombre del archivo y luego se carga con _rast_. A continuación generamos un gráfico del mismo, la escala de colores y los ejes son automáticamente escogidos.
+A continuación vamos a cargar un archivo de altitudes del tipo tif, de la base de datos de SRTM <https://www2.jpl.nasa.gov/srtm/>, para eso agregamos al camino de los datos, el nombre del archivo y luego se carga con el métoso _rast_. A continuación generamos un gráfico del mismo, la escala de colores y los ejes son automáticamente escogidos.
 
 
 ```{r intro1}
@@ -92,25 +92,29 @@ plot(R)
 ```
 
 
-```{r}
-d <- classify(R, c(-6,0,50,100,250,500, 1000, 1530))
+\
+
+Com base en las estatísticas, también podemos hacer una clasificación del atributo altitud, por ejemplo:
+
+```{r intro5}
+d <- classify(R, c(-7,0,50,100,250,500, 1000, 1530))
 plot(d, type="classes")
 north(cbind(-54, -27))
 ```
 
-
+\
 
 
 Los archivos cargados y unidos están en coordenadas geográficas, podemos proyectarlo para un sistema plano como UTM, de la siguiente forma:
 
 
-```{r intro5}
+```{r intro6}
 nuevo_crs <- "+proj=utm +zone=22 +south +datum=WGS84 +units=m +no_defs +type=crs"
 Rp <- project((R), nuevo_crs)
 ```
 
 
-```{r intro6}
+```{r intro7}
 # verificando el SGR
 crs(Rp, proj=TRUE)
 # resolución
@@ -121,13 +125,26 @@ summary(Rp)
 plot(Rp)
 ```
 
+Como mencionamos en la introducción, los objetos creados de clase **SpatRaster** en una sesión son temporarios y una vez cerrada la sesión no es posible recuperarlos. Para conservar un objeto y recuperarlos en sesiones posteriores, debemos grabarlo, de la siguiente forma.
+
+```{r intro8}
+# verificar el camino de grabación
+f <- file.path("C:/Users/Administrador/Documents/R/Intro_analise_espacial_R/exercicios/data")
+```
+
+```{r intro9}
+f <- file.path("~/R/Intro_analise_espacial_R/exercicios/data/uru_bras.tif")
+# grabar
+writeRaster(Rp,f, overwrite=TRUE)
+```
+
 
 \
 
-A continuación vamos cargar dos imagenes de satélite, una Landsat tipo _tif_, de tres bandas RGB y una Sentinel también con la combinación RGB, pero de formato _jp2_.
+A continuación vamos a cargar dos imagenes de satélite: una **Landsat** tipo _tif_, de tres bandas RGB y una **Sentinel** también con la combinación RGB, pero de formato _jp2_.
 
 
-```{r intro7}
+```{r intro10}
 # camino + nombre del archivo Landsat
 f3<- (paste(cam,"landsat.tif",sep = "/"))
 # cargar el archivo
@@ -139,7 +156,7 @@ plot(r3)
 En ester caso, el método _plot_ genera tres gráficos, correspondiendo a cada banda que contiene el archivo. Para poder crear un gráfico de la composición RGB se debe usar el método _plotRGB_ con algunas opciones.
 
 
-```{r intro8}
+```{r intro11}
 res(r3)
 nlyr(r3)
 names(r3)
@@ -148,24 +165,39 @@ plotRGB(r3, r=1, g=2, b=3, a=NULL, colNA="white",stretch="lin", smooth=TRUE, axe
 
 \
 
-El archivo Sentinel es cargado y el método _plot_ genera automáticamente la combinación de RGB correspondiente.
+El archivo Sentinel es cargado y el método _plot_ genera automáticamente la combinación de RGB correspondiente. Nota: ela imagen anterior y esta, corresponden a áreas diferentes.
 
 
-```{r intro9}
+```{r intro12}
 # cargar el archivo
 r4 <- rast((paste(cam,"sent_20230716.jp2",sep = "/"))) 
 # imagen
-plot(r4, axes=TRUE)
+plot(r4)
 ```
 
 
 
-```{r intro10}
+```{r intro13}
 crs(r4, proj=TRUE)
 ext(r4)
 res(r4)
 nlyr(r4)
 names(r4)
 head(r4)
+```
+
+\
+
+Verificamos que el sistema geodésico es UTM, huso 21, la extensión de la imagen, la resolución de 10 m y que el archivo contiene 2 bandas o camadas (RGB).
+
+Es importante recordar que al leer estos archivos, no se cargan los valores de las células en la memoria de la computadora. Los archivos ráster pueden tener un tamaño grande y, para conservar la memoria, los datos se leen cuando es necesario.
+
+En el siguiente código, vemos el tamaño del archivo raster de **Sentinel** en la memoria y en el disco.
+
+```{r intro14}
+# Tamaño en memoria
+object.size(r4)
+# Tamaño en disco
+file.size("~/R/Intro_analise_espacial_R/exercicios/data/sent_20230716.jp2")
 ```
 
